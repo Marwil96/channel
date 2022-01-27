@@ -1,0 +1,2 @@
+export const FETCH_ALL_POSTS = "FETCH_ALL_POSTS";
+export const FETCH_ALL_COMMENTS = "FETCH_ALL_COMMENTS";
