@@ -4,6 +4,7 @@ import { auth, addPost, GetAllPosts } from "../actions/database";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { getDomain } from "../helperFunctions";
 import { RootStateOrAny, useDispatch, useSelector } from "react-redux";
+import Layout from "src/components/Layout";
 
 const ChannelOverview = () => {
   let { channelName } = useParams();
@@ -40,7 +41,7 @@ const ChannelOverview = () => {
   }
 
   return (
-    <div >
+    <Layout>
       <div style={{display:'flex', flexDirection:'column',}}>
        <h1>{channelName}</h1>
         {!loading && 
@@ -58,7 +59,7 @@ const ChannelOverview = () => {
        <h1>All Posts</h1>
        {allPosts.map(({title, body, author, id} : {title: string, body: string, author?: any, id: string}, index: any) => <button onClick={() => navigate(`/channels/${channelName}/${id}`)} key={index} style={{display: 'flex', cursor: 'pointer', flexDirection:'column', padding: '24px', background: '#f1f1f1'}}> <img src={author.photoUrl} style={{width: 40, height: 40}} alt='profile'/><h5>{author.email}</h5><h3>{title}</h3><p>{body}</p></button>)}
       </div>
-    </div>
+    </Layout>
   );
 }
 export default ChannelOverview;
