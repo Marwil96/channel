@@ -7,6 +7,8 @@ import Login from './pages/login';
 import Dashboard from './pages/dashboard';
 import ChannelOverview from './pages/channelOverview';
 import PostOverview from './pages/postOverview';
+import Layout from './components/Layout';
+import ForumOverview from './pages/forumOverview';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -16,13 +18,16 @@ import PostOverview from './pages/postOverview';
 const App = (): JSX.Element => {
   return (
     <Router>
-        <Routes>
-          <Route path="/" element={<Login />} />
-           <Route path="/dashboard" element={<Dashboard />} />
-           <Route path="channels/:channelName" element={<ChannelOverview />} />
-           <Route path="channels/:channelName/:postID" element={<PostOverview />} />
-        </Routes>
-      </Router>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route element={<Layout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="channels/:channelName" element={<ChannelOverview />} />
+          {/* <Route path="channels/:channelName/:postID" element={<PostOverview />} />  */}
+          <Route path="channels/:channelName/:forumID" element={<ForumOverview />} />  
+        </Route >
+      </Routes>
+    </Router>
   )
 };
 

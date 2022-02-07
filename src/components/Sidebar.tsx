@@ -1,11 +1,12 @@
-import { ArchiveIcon, ArrowTopRightIcon } from '@radix-ui/react-icons';
+import { ArchiveIcon, ArrowTopRightIcon, CopyIcon } from '@radix-ui/react-icons';
 import React, { useEffect, useState } from 'react';
 import { auth } from "../actions/database";
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { styled } from '../stitches.config';
 import Button from './Button';
 import Spinner from './Spinner';
+import { RootStateOrAny, useSelector } from 'react-redux';
 
 const Wrapper = styled('main', {
   display: 'flex',
@@ -24,6 +25,11 @@ const Wrapper = styled('main', {
 const Title = styled('h1', {
   fontSize: '$3',
   marginBottom: '$5',
+  cursor: 'pointer',
+  
+  '&:hover': {
+    opacity: '0.5',
+  }
 });
 
 const ActionItem = styled('span', {
@@ -46,6 +52,29 @@ const ActionsWrapper = styled('div', {
   flexDirection: 'column',
   marginBottom: '$5'
 });
+
+const ForumItem = styled('span', {
+  fontSize: '$2',
+  display: 'flex',
+  alignItems: 'center',
+  fontWeight: '500',
+  color: '$text',
+  cursor: 'pointer',
+  "&:hover": {
+    opacity: '0.5',
+  },
+
+  'svg': {
+    marginRight: '1rem'
+  }
+});
+
+const ForumsWrapper = styled('div', {
+  display: 'flex',
+  flexDirection: 'column',
+  marginBottom: '$2'
+});
+
 
 const Subtitle = styled('h2', {
   fontSize: '$1',
@@ -90,31 +119,23 @@ const ProfileTag = ({username, image }: {username: string, image: string}) => {
       <ArrowTopRightIcon />
     </ProfileTagWrapper>
   )
-}
+};
 
-const Sidebar = () => {
-  let { channelName } = useParams();
-  const [user, loading, error] = useAuthState(auth);
-  const [userDetails, setUserDetails] = useState({displayName: '', email: '', photoUrl: ''})
+const ComposedForumItem = ({children, highlighted} : {children: React.ReactNode, highlighted?: boolean}) => (
+  <ForumsWrapper>
+    <ForumItem css={highlighted && {color:'$darkGreen'}}><CopyIcon /> {children}</ForumItem>
+  </ForumsWrapper>
+);
 
-    useEffect(() => {
-    if (loading) {
-      // maybe trigger a loading screen
-      return;
-    }
-    
-    if(user) {
-     setUserDetails({displayName: user.displayName, email: user.email, photoUrl: user.photoURL})
-    }
-  }, [user, loading]);
-
-  console.log(user)
+const Sidebar = ({user, loading, openPopup} : {user: any, loading: boolean, openPopup: any}) => {
+  let { channelName, forumID } = useParams();
+  const { allForums } = useSelector((state: RootStateOrAny) => state.DatabaseReducer);
   
   return (
     <Wrapper>
       <div>
         {/* Channel Title */}
-        <Title>{channelName}</Title>
+        <Link to={`channels/${channelName}`}><Title>{channelName}</Title></Link>
         {/* Start Thread */}
 
         {/* All Actions */}
@@ -126,13 +147,17 @@ const Sidebar = () => {
 
         {/* All Threads */}
         <Subtitle>All Forums</Subtitle>
+          <ActionsWrapper>
+           {allForums.map(({title, id} : {title: string, id: string }) => <Link to={`/channels/${channelName}/${id}`}><ComposedForumItem highlighted={forumID === id}>{title}</ComposedForumItem></Link>)}
+           <span style={{fontSize:'1.4rem', textDecoration:'underline', cursor: 'pointer'}} onClick={() => openPopup({state: true, type: 'createForum'})}>Start Forum</span>
+          </ActionsWrapper>
       </div>
       {/* Thread List*/}
 
       {/* Userprofile */}
       <div>
-        {!loading ? <ProfileTag image={userDetails.photoUrl} username={userDetails.displayName}  /> : <Spinner />}
-        <Button fullWidth>Start Thread</Button>
+        {!loading ? <ProfileTag image={user.photoUrl} username={user.displayName}  /> : <Spinner />}
+        <Button fullWidth>Create Post</Button>
       </div>
     </Wrapper>
   )

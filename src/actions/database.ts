@@ -3,10 +3,6 @@ import {
   GoogleAuthProvider,
   getAuth,
   signInWithPopup,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  sendPasswordResetEmail,
-  signOut,
 } from "firebase/auth";
 import {
   getFirestore,
@@ -20,7 +16,7 @@ import {
   onSnapshot,
   getDoc,
 } from "firebase/firestore";
-import { FETCH_ALL_POSTS, FETCH_ALL_COMMENTS } from "./constables.js";
+import { FETCH_ALL_POSTS, FETCH_ALL_COMMENTS, FETCH_ALL_FORUMS } from "./constables";
 
 export const firestoreAutoId = () => {
   const CHARS =
@@ -63,13 +59,13 @@ export const signInWithGoogle = async () => {
         email: user.email,
       });
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
     alert(err.message);
   }
 };
 
-export const addChannel = async ({ domain }) => {
+export const addChannel = async ({ domain }: {domain: string}) => {
   try {
     const q = query(collection(db, "channels"), where("name", "==", domain));
     const docs = await getDocs(q);
@@ -78,13 +74,29 @@ export const addChannel = async ({ domain }) => {
         name: domain,
       });
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
     alert(err.message);
   }
 };
 
-export const addPost = async ({ domain, title, body, author }) => {
+export const CreateForum = async ({ domain, title, desc, author } : { domain: string, title: string, desc: string, author: any }) => {
+  try {
+    const newId = firestoreAutoId();
+    const ref = doc(db, "channels", domain, "forums", newId);
+    await setDoc(ref, {
+      title: title,
+      desc: desc,
+      author: author,
+      id: newId
+    });
+  } catch (err: any) {
+    console.error(err);
+    alert(err.message);
+  }
+};
+
+export const addPost = async ({ domain, title, body, author } : { domain: string, title: string, body: string, author: any }) => {
   try {
     const newId = firestoreAutoId();
     const ref = doc(db, "channels", domain, "posts", newId);
@@ -94,43 +106,55 @@ export const addPost = async ({ domain, title, body, author }) => {
       author: author,
       id: newId
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
     alert(err.message);
   }
 };
 
-export const PostComment = async ({ domain, message, postID, author }) => {
+export const PostComment = async ({ domain, message, postID, author, forumID} : { domain: string, message: string, postID: string, author: any, forumID: string }) => {
   try {
     const newId = firestoreAutoId();
-    const ref = doc(db, "channels", domain, "posts", postID, "comments", newId);
+    const ref = doc(db, "channels", domain, 'forums', forumID, "posts", postID, "comments", newId);
     await setDoc(ref, {
       message: message,
       author: author,
       id: newId,
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
     alert(err.message);
   }
 };
 
-export const GetPost = async({ domain, postID }) => { 
+export const GetPost = async({ domain, postID } : { domain: string, postID: string }) => { 
   try {
     const ref = doc(db, "channels", domain, "posts", postID);
     const data = await getDoc(ref);
     return data.data();
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
     alert(err.message);
   }
 }
 
-export const GetAllPosts = ({ domain }) => {
-  return (dispatch) => {
+export const GetForum = async({ domain, forumID } : { domain: string, forumID: string }) => { 
+  try {
+    const ref = doc(db, "channels", domain, "forums", forumID);
+    const data = await getDoc(ref);
+    return data.data();
+  } catch (err: any) {
+    console.error(err);
+    alert(err.message);
+  }
+}
+
+
+export const GetAllPosts = ({ domain, forumID } : {domain: string, forumID: string}) => {
+  return (dispatch: any) => {
     dispatch({type: FETCH_ALL_POSTS, payload: {loading: true, all_posts: []}})
-    onSnapshot(collection(db, `channels/${domain}/posts`), (querySnapshot) => {
-      const posts = [];
+    onSnapshot(collection(db, `channels/${domain}/${forumID}/posts`), (querySnapshot) => {
+      const posts: any[] = [];
       querySnapshot.forEach((doc) => {
         posts.push(doc.data());
       });
@@ -140,15 +164,29 @@ export const GetAllPosts = ({ domain }) => {
   }
 }
 
-export const GetAllComments = ({ domain, postID }) => {
+export const GetAllForums = ({ domain } : {domain: any}) => {
+  return (dispatch: any) => {
+    dispatch({type: FETCH_ALL_FORUMS, payload: {loading: true, all_forums: []}})
+    onSnapshot(collection(db, `channels/${domain}/forums`), (querySnapshot) => {
+      const forums: any[] = [];
+      querySnapshot.forEach((doc) => {
+        forums.push(doc.data());
+      });
 
-  return (dispatch) => {
+      dispatch({type: FETCH_ALL_FORUMS, payload: {loading: false, all_forums: forums }})
+    })
+  }
+}
+
+export const GetAllComments = ({ domain, postID } :{ domain: string, postID: string }) => {
+
+  return (dispatch: any) => {
     dispatch({
       type: FETCH_ALL_COMMENTS,
       payload: { loading: true, all_posts: [] },
     });
     onSnapshot(collection(db, `channels/${domain}/posts/${postID}/comments`), (querySnapshot) => {
-      const comments = [];
+      const comments: any[] = [];
       querySnapshot.forEach((doc) => {
         comments.push(doc.data());
       });

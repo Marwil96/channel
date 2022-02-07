@@ -19,7 +19,8 @@ export const { styled, getCssText } : {styled: any, getCssText: any} = createSti
       text: '#000000',
       bg: '#FFFFFF',
       white: '#FFFFFF',
-      darkGreen: '#05473C',
+      // darkGreen: '#05473C',
+      darkGreen: '#42bfa3',
       vibrantGreen: '#54ECCA',
     },
     fontSizes: {

@@ -1,16 +1,52 @@
-import React, { Children } from 'react';
+import React, { Children, useEffect, useState } from 'react';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { RootStateOrAny, useDispatch, useSelector } from 'react-redux';
+import { Outlet, useNavigate, useParams } from 'react-router-dom';
+import { auth, GetAllForums, GetAllPosts } from 'src/actions/database';
+import { getDomain } from 'src/helperFunctions';
 import { styled } from '../stitches.config';
+import CreateForumPopup from './CreateForumPopup';
 import Sidebar from './Sidebar';
 
 const Wrapper = styled('main', {
   display: 'flex',
 });
 
-const Layout = ({ children } : {children: any}) => {
+const Layout = ({ children } : {children?: any}) => {
+  let { channelName } = useParams();
+  const [user, loading, error] = useAuthState(auth);
+  const [userDomain, setUserDomain] = useState('')
+  const [userDetails, setUserDetails] = useState({displayName: '', email: '', photoUrl: ''})
+  const [openPopup, setOpenPopup] = useState({state: false, type: ''}) ;
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if(channelName) {
+      // dispatch(GetAllPosts({domain: channelName}))
+      dispatch(GetAllForums({domain: channelName}))
+    }
+  }, [])
+
+
+  useEffect(() => {
+    if (loading) {
+      // maybe trigger a loading screen
+      return;
+    }
+    
+    if(user) {
+     setUserDomain(getDomain({email: user.email}))
+     setUserDetails({displayName: user.displayName, email: user.email, photoUrl: user.photoURL})
+    }
+    if (!user && userDomain !== channelName) navigate("/");
+  }, [user, loading]);
+
   return (
     <Wrapper>
-      <Sidebar />
-      {children}
+      <Sidebar user={userDetails} loading={loading} openPopup={setOpenPopup} />
+      {<CreateForumPopup open={openPopup.type === 'createForum' && openPopup.state} domain={channelName} user={userDetails} close={() => setOpenPopup({state: false, type: ''})} />}
+      <Outlet context={{user: userDetails, userLoading: loading}}/>
     </Wrapper>
   )
 }

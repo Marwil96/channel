@@ -45,7 +45,7 @@ const PostOverview = () => {
   }, [user, loading]);
 
   const postCommentHelper = async () => {
-    await PostComment({domain: channelName, postID: postID, message: message, author: {...userDetails}})
+    // await PostComment({domain: channelName, postID: postID, message: message, author: {...userDetails}})
   }
 
   return (
