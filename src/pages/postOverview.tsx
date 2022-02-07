@@ -6,8 +6,7 @@ import { getDomain } from "../helperFunctions";
 import { RootStateOrAny, useDispatch, useSelector } from "react-redux";
 
 const PostOverview = () => {
-  let { channelName, postID } = useParams();
-  const [user, loading, error] = useAuthState(auth);
+  let { channelName, postID, forumID } = useParams();
   const [loadingPost, setLoadingPost] = useState(false);
   const {allComments} = useSelector((state: RootStateOrAny) => state.DatabaseReducer);
   const [userDomain, setUserDomain] = useState('')
@@ -21,28 +20,16 @@ const PostOverview = () => {
   useEffect(() => {
     const AsyncFunc = async () => {
       setLoadingPost(true)
-      const result = await GetPost({postID: postID, domain: channelName})
+      const result = await GetPost({postID: postID, domain: channelName, forumID: forumID})
+      console.log(result)
       setPost({title: result.title, body: result.body, author: result.author})
       setLoadingPost(false)
     }
 
-    dispatch(GetAllComments({domain: channelName, postID: postID}))
+    // dispatch(GetAllComments({domain: channelName, postID: postID}))
     AsyncFunc()
   }, [])
 
-
-  useEffect(() => {
-    if (loading) {
-      // maybe trigger a loading screen
-      return;
-    }
-    
-    if(user) {
-     setUserDomain(getDomain({email: user.email}))
-     setUserDetails({displayName: user.displayName, email: user.email, photoUrl: user.photoURL})
-    }
-    if (!user && userDomain !== channelName) navigate("/");
-  }, [user, loading]);
 
   const postCommentHelper = async () => {
     // await PostComment({domain: channelName, postID: postID, message: message, author: {...userDetails}})

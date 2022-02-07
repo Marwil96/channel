@@ -6,6 +6,7 @@ import { auth, GetAllForums, GetAllPosts } from 'src/actions/database';
 import { getDomain } from 'src/helperFunctions';
 import { styled } from '../stitches.config';
 import CreateForumPopup from './CreateForumPopup';
+import CreatePostPopup from './CreatePostPopup';
 import Sidebar from './Sidebar';
 
 const Wrapper = styled('main', {
@@ -13,7 +14,7 @@ const Wrapper = styled('main', {
 });
 
 const Layout = ({ children } : {children?: any}) => {
-  let { channelName } = useParams();
+  let { channelName, forumID } = useParams();
   const [user, loading, error] = useAuthState(auth);
   const [userDomain, setUserDomain] = useState('')
   const [userDetails, setUserDetails] = useState({displayName: '', email: '', photoUrl: ''})
@@ -46,7 +47,8 @@ const Layout = ({ children } : {children?: any}) => {
     <Wrapper>
       <Sidebar user={userDetails} loading={loading} openPopup={setOpenPopup} />
       {<CreateForumPopup open={openPopup.type === 'createForum' && openPopup.state} domain={channelName} user={userDetails} close={() => setOpenPopup({state: false, type: ''})} />}
-      <Outlet context={{user: userDetails, userLoading: loading}}/>
+      {<CreatePostPopup open={openPopup.type === 'createPost' && openPopup.state} domain={channelName} user={userDetails} forumID={forumID} close={() => setOpenPopup({state: false, type: ''})} />}
+      <Outlet context={{user: userDetails, userLoading: loading, openPopup: setOpenPopup}}/>
     </Wrapper>
   )
 }

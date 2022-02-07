@@ -23,7 +23,7 @@ const App = (): JSX.Element => {
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="channels/:channelName" element={<ChannelOverview />} />
-          {/* <Route path="channels/:channelName/:postID" element={<PostOverview />} />  */}
+          <Route path="channels/:channelName/:forumID/:postID" element={<PostOverview />} /> 
           <Route path="channels/:channelName/:forumID" element={<ForumOverview />} />  
         </Route >
       </Routes>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
-import { auth, addPost, GetAllPosts } from "../actions/database";
+// import { auth, CreatePost, GetAllPosts } from "../actions/database";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { getDomain } from "../helperFunctions";
 import { RootStateOrAny, useDispatch, useSelector } from "react-redux";
@@ -18,7 +18,7 @@ const ChannelOverview = () => {
   console.log(user, userLoading)
 
   const createPostHelper = async () => {
-    await addPost({domain: channelName, title: title, body: body, author: {...user}})
+    // await CreatePost({domain: channelName, title: title, body: body, author: {...user}})
   }
 
   return (

@@ -96,10 +96,10 @@ export const CreateForum = async ({ domain, title, desc, author } : { domain: st
   }
 };
 
-export const addPost = async ({ domain, title, body, author } : { domain: string, title: string, body: string, author: any }) => {
+export const CreatePost = async ({ domain, forumID, title, body, author } : { domain: string, forumID: string, title: string, body: string, author: any }) => {
   try {
     const newId = firestoreAutoId();
-    const ref = doc(db, "channels", domain, "posts", newId);
+    const ref = doc(db, "channels", domain, 'forums', forumID, "posts", newId);
     await setDoc(ref, {
       title: title,
       body: body,
@@ -127,10 +127,13 @@ export const PostComment = async ({ domain, message, postID, author, forumID} : 
   }
 };
 
-export const GetPost = async({ domain, postID } : { domain: string, postID: string }) => { 
+export const GetPost = async({ domain, postID, forumID } : { domain: string, postID: string, forumID: string }) => { 
+  console.log(postID,forumID, domain)
   try {
-    const ref = doc(db, "channels", domain, "posts", postID);
+    const ref = doc(db, "channels", domain, "forums", forumID, "posts", postID);
+    console.log(ref)
     const data = await getDoc(ref);
+    console.log(data)
     return data.data();
   } catch (err: any) {
     console.error(err);
@@ -153,7 +156,7 @@ export const GetForum = async({ domain, forumID } : { domain: string, forumID: s
 export const GetAllPosts = ({ domain, forumID } : {domain: string, forumID: string}) => {
   return (dispatch: any) => {
     dispatch({type: FETCH_ALL_POSTS, payload: {loading: true, all_posts: []}})
-    onSnapshot(collection(db, `channels/${domain}/${forumID}/posts`), (querySnapshot) => {
+    onSnapshot(collection(db, `channels/${domain}/forums/${forumID}/posts`), (querySnapshot) => {
       const posts: any[] = [];
       querySnapshot.forEach((doc) => {
         posts.push(doc.data());

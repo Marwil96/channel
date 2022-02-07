@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { auth, GetPost, PostComment, GetAllComments, GetForum, GetAllPosts } from "../actions/database";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { getDomain } from "../helperFunctions";
 import { RootStateOrAny, useDispatch, useSelector } from "react-redux";
 import Spinner from "src/components/Spinner";
 import { styled } from "../stitches.config";
+import Button from "src/components/Button";
+import PostCard from "src/components/PostCard";
 
 const ForumWrapper = styled('section', {
   width: '100%',
@@ -38,21 +40,29 @@ const ForumDesc = styled('span', {
 
 const Subtitle = styled('span', {
   fontSize: '$3',
-  marginBottom: '$2',
   fontWeight: '600',
   opacity: 0.8,
   textTransform: 'uppercase',
   fontFamily: '$mono',
 })
 
+const Header = styled('div', {
+  display: 'flex',
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'flex-end',
+  marginBottom: '0',
+  paddingBottom: '$2',
+  borderBottom: '1px solid $black',
+  width: '100%',
+});
+
 const ForumOverview = () => {
   let { channelName, forumID } = useParams();
-  const [user, loading, error] = useAuthState(auth);
   const [loadingForum, setLoadingForum] = useState(false);
   const {allComments, allPosts} = useSelector((state: RootStateOrAny) => state.DatabaseReducer);
-  const [userDomain, setUserDomain] = useState('')
+  const {user, userLoading, openPopup}: {user: any, userLoading:any, openPopup?: any} = useOutletContext();
   const [message, setMessage] = useState('');
-  const [userDetails, setUserDetails] = useState({displayName: '', email: '', photoUrl: ''})
   const [forum, setForum] = useState({title: '', desc: '', id: '', author: {displayName: '', email: '', photoUrl: ''}})
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -62,8 +72,8 @@ const ForumOverview = () => {
     const AsyncFunc = async () => {
       setLoadingForum(true)
       const result = await GetForum({forumID: forumID, domain: channelName})
-      // dispatch(GetAllPosts({domain: channelName, forumID: forumID}))
       setForum({title: result.title, desc: result.desc, author: result.author, id: result.id})
+      dispatch(GetAllPosts({domain: channelName, forumID: forumID}))
       setLoadingForum(false)
     }
 
@@ -90,12 +100,11 @@ const ForumOverview = () => {
           <ForumDesc>{forum.desc}</ForumDesc>
         </>}
 
-        <Subtitle>All Posts</Subtitle>
-        {allComments && allComments.map((comment: any, index: any) => <div key={index} style={{display:'flex', flexDirection:'row'}}><h5 style={{marginRight: 16}}>{comment.author.displayName}</h5> <p>{comment.message}</p></div>)}
-        <input placeholder="Message" onChange={(e) => setMessage(e.target.value)}/>
-        <button onClick={() => message.length > 0 && postCommentHelper()} style={{background: message.length === 0 ? 'white' : 'orange'}}>
-         Create Post
-       </button>
+        <Header>
+          <Subtitle>All Posts</Subtitle>
+          <Button onClick={() => openPopup({state: true, type:'createPost'})}>Add Post</Button>
+        </Header>
+        {allPosts.map(({title, body, author, id}: {title: string, body: string, author: any, id: string}) => <PostCard onClick={() => navigate(`/channels/${channelName}/${forumID}/${id}`)} title={title} body={body} username={author.displayName} profileImage={author.photoUrl}  />)}
       </ForumContent>
     </ForumWrapper>
   );
