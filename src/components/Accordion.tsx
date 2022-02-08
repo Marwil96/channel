@@ -86,7 +86,7 @@ const StyledContent = styled(AccordionPrimitive.Content, {
 });
 
 const StyledContentText = styled('div', {
-  padding: '15px 0px',
+  // padding: '15px 0px',
   paddingBottom: 0,
 });
 
@@ -119,10 +119,10 @@ export const AccordionDemo = ({title, sections} : {sections: any, title?: string
 
     {sections.map(({title, data, userID} : {title: string, data?: any, userID: string}, index: any) => (
       <AccordionItem value={`item-${index}`}>
-        <AccordionTrigger>{title}</AccordionTrigger>
+        {/* <AccordionTrigger>{title}</AccordionTrigger> */}
         <AccordionContent>
-          {data.map(({message, author, link, type, timestamp, date, id}: {id: string, message: string, author: any, link: string, type: string, timestamp: Timestamp, date: any}, index: any) => (
-            <NotificationRow message={message} author={author} link={link} type={type} timestamp={timestamp} date={date} userID={userID} id={id}/>
+          {data.map(({message, author, link, type, timestamp, date, id, requestedResponse}: {requestedResponse?: boolean, id: string, message: string, author: any, link: string, type: string, timestamp: Timestamp, date: any}, index: any) => (
+            <NotificationRow message={message} author={author} link={link} type={type} timestamp={timestamp} date={date} userID={userID} id={id} requestedResponse={requestedResponse} />
           ))}
         </AccordionContent>
       </AccordionItem>)

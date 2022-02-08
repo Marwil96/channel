@@ -1,4 +1,5 @@
 import { TrashIcon } from "@radix-ui/react-icons";
+import { useNavigate } from "react-router-dom";
 import { RemoveNotification } from "src/actions/database";
 import { styled } from "src/stitches.config";
 
@@ -8,10 +9,13 @@ const Wrapper = styled('div', {
   alignItems: 'center',
   justifyContent: 'space-between',
   padding: '$2 $4',
+  border: 0,
+  margin:0,
   borderBottom: '1px solid #e4e2e4',
+  background: '#F9F8F9',
 
   '&:first-child': {
-    paddingTop: 0
+    // paddingTop: 0
   },
 
   '&:last-child': {
@@ -57,8 +61,9 @@ const ButtonWrapper = styled('button', {
   cursor: 'pointer',
 });
 
-const NotificationRow = ({message, author, link, type, timestamp, date, id, userID}: any) => {
-  const dateString = new Date(date).toLocaleDateString();
+const NotificationRow = ({message, author, link, type, timestamp, date, id, userID, requestedResponse}: any) => {
+  const dateString = new Date(date).toLocaleString();
+  const navigate = useNavigate();
   
   return (
     <Wrapper>
@@ -73,9 +78,13 @@ const NotificationRow = ({message, author, link, type, timestamp, date, id, user
           <Title>{message}</Title>
         </div>
       </div>
-      <ButtonWrapper onClick={() => RemoveNotification({userID: userID, id: id})}> 
-        <TrashIcon />
-      </ButtonWrapper>
+      <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
+        {requestedResponse && <ButtonWrapper css={{marginRight: '1.4rem', backgroundColor:'$darkGreen', border: 0, '&:hover': {opacity: 0.5}}} onClick={() => navigate(link)}>Response requested by {author.displayName}</ButtonWrapper>}
+        {!requestedResponse && <Lable css={{marginRight: '$3', fontStyle: 'normal', fontFamily: '$mono', textDecoration: 'underline', cursor: 'pointer', '&:hover': {opacity: 0.5}}} onClick={() => navigate(link)}>Go to {type}</Lable>}
+        <ButtonWrapper onClick={() => RemoveNotification({userID: userID, id: id})}> 
+          <TrashIcon />
+        </ButtonWrapper>
+      </div>
     </Wrapper>
   )
 }

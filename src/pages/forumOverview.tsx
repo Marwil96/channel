@@ -39,7 +39,7 @@ const ForumDesc = styled('span', {
 });
 
 const Subtitle = styled('span', {
-  fontSize: '$3',
+  fontSize: '$1',
   fontWeight: '600',
   opacity: 0.8,
   textTransform: 'uppercase',

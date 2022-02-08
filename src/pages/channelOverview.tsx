@@ -87,9 +87,9 @@ const ChannelOverview = () => {
         <Title css={{marginBottom: '$6'}}>Inbox</Title>
 
         <Header>
-          <Subtitle>All Notifications</Subtitle>
+          <Subtitle>All</Subtitle>
         </Header>
-        {allNotifications.length === 0 ? <Title css={{textAlign: 'center', marginTop: '4.2rem'}}>Empty Inbox</Title> : <Accordion sections={[{title: 'All Notifications', data:allNotifications, userID: user.userID}]} />}
+        {allNotifications.length === 0 ? <Title css={{textAlign: 'center', marginTop: '4.2rem'}}>Empty Inbox</Title> : <Accordion sections={[{title: 'All', data:allNotifications, userID: user.userID}]} />}
       </Content>
     </Wrapper>
   );

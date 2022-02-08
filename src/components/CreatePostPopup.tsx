@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { styled, keyframes } from '@stitches/react';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { CreateForum, CreatePost } from 'src/actions/database';
+import { CreateForum, CreatePost, GetAllUsers } from 'src/actions/database';
 
 const overlayShow = keyframes({
   '0%': { opacity: 0 },
@@ -183,10 +183,46 @@ const TextArea = styled('textarea', {
   '&:focus': { boxShadow: `0 0 0 2px #000` },
 });
 
+const UsersSubtitle = styled('span', {
+  fontSize: '$2',
+  color: '#000',
+  fontFamily: '$mono',
+});
+const UsersWrapper = styled('div', {
+  display: 'flex',
+  marginBottom: '2rem'
+})
+
+const UserBox = styled('div', {
+  padding: '0.6rem',
+  background: "#f1f1f1",
+  width: 'fit-content',
+  fontSize: '$2',
+  fontFamily: '$mono',
+  cursor: 'pointer'
+})
+
 const CreatePostPopup = ({open, close, user, domain, forumID}: {open?: boolean, close?: any, user: any, domain: string, forumID?: string }) => {
   const [postSubject, setPostSubject] = useState('');
   const [body, setBody] = useState("");
+  const [userTerm, setUserTerm] = useState('');
+  const [allUsers, setAllUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([])
+  const [selectedUsers, setSelectedUsers] = useState([])
 
+  useEffect(() => {
+    const asyncFunc = async () => { 
+      const result = await GetAllUsers({domain})
+      console.log(result)
+      setAllUsers(result)
+      setFilteredUsers(result)
+    } 
+    asyncFunc()
+  }, [])
+
+  useEffect(() => {
+    setFilteredUsers(allUsers.filter(user => user.email.toLowerCase().includes(userTerm.toLowerCase())))
+  }, [userTerm])
 
   return (
     <Dialog open={open}>
@@ -199,15 +235,30 @@ const CreatePostPopup = ({open, close, user, domain, forumID}: {open?: boolean, 
           <Label htmlFor="postSubject">Subject</Label>
           <Input id="postSubject" value={postSubject} onChange={(e) => setPostSubject(e.target.value)} placeholder="Post Subject" />
         </Fieldset>
-
+        {selectedUsers.length !== 0 && 
+        <>
+          <UsersSubtitle style={{marginBottom: '0.8rem', display: 'block'}}>Requested for response</UsersSubtitle>
+          <UsersWrapper style={{marginBottom: '2rem'}}>
+            {selectedUsers.map((user: any) => <UserBox onClick={() => {setSelectedUsers(selectedUsers.filter((item) => item.email !== user.email)); setFilteredUsers([...filteredUsers, {...user}]); setAllUsers([...allUsers, {...user}]) }}>{user.email}</UserBox>)}
+          </UsersWrapper>
+        </>}
+        <UsersSubtitle style={{marginBottom: '0.8rem', display: 'block'}}>All users</UsersSubtitle> 
+        <UsersWrapper>
+          {filteredUsers.map((item: any) => <UserBox onClick={() => {setSelectedUsers([...selectedUsers, {...item}]); setFilteredUsers(selectedUsers.filter((item) => item.email !== user.email)); setAllUsers(selectedUsers.filter((item) => item.email !== user.email))  }}>{item.email}</UserBox>)}
+        </UsersWrapper>
+        <Fieldset>
+          <Label htmlFor="requestResponse">Request Response</Label>
+          <Input id='requestResponse' placeholder='Search after users' onChange={(e) => setUserTerm(e.target.value)} value={userTerm} />
+          
+        </Fieldset>
 
         <Fieldset>
           <Label htmlFor="body">Forum Body</Label>
-          <TextArea id="body" value={body} onChange={(e) => setBody(e.target.value)} placeholder="gullmar1337" />
+          <TextArea id="body" value={body} onChange={(e) => setBody(e.target.value)} placeholder="Desc" />
         </Fieldset>
 
         <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
-          <DialogClose asChild onClick={async () =>{ await CreatePost({ domain: domain, forumID: forumID, title: postSubject, body: body, author: user}); close()}}>
+          <DialogClose asChild onClick={async () =>{ await CreatePost({ domain: domain, forumID: forumID, title: postSubject, body: body, author: user, requestedResponse: selectedUsers}); close()}}>
             <Button aria-label="Close" variant="green">
               Create Post
             </Button>

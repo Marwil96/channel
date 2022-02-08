@@ -47,7 +47,12 @@ export const db = getFirestore(app);
 
 export const googleProvider = new GoogleAuthProvider();
 
-const sortAfterDate = (arr: any []) => {
+const sortAfterDateAsc = (arr: any []) => {
+  const result = arr.sort(function(a,b){return a.timestamp > b.timestamp ? 1 : a.timestamp < b.timestamp ? -1 : 0 })
+  return result
+}
+
+const sortAfterDateDesc = (arr: any []) => {
   const result = arr.sort(function(a,b){return a.timestamp < b.timestamp ? 1 : a.timestamp > b.timestamp ? -1 : 0 })
   return result
 }
@@ -64,6 +69,7 @@ export const signInWithGoogle = async () => {
         name: user.displayName,
         authProvider: "google",
         email: user.email,
+        domain: user.email.split('@')[1]
       });
     }
   } catch (err: any) {
@@ -107,7 +113,7 @@ export const CreateForum = async ({ domain, title, desc, author } : { domain: st
   }
 };
 
-export const CreatePost = async ({ domain, forumID, title, body, author } : { domain: string, forumID: string, title: string, body: string, author: any }) => {
+export const CreatePost = async ({ domain, forumID, title, body, author, requestedResponse } : { domain: string, forumID: string, title: string, body: string, author: any, requestedResponse: any }) => {
   try {
     const newId = firestoreAutoId();
     const ref = doc(db, "channels", domain, 'forums', forumID, "posts", newId);
@@ -118,7 +124,7 @@ export const CreatePost = async ({ domain, forumID, title, body, author } : { do
       id: newId,
       timestamp: serverTimestamp()
     });
-    await CreateNotification({ link: `/channels/${domain}/${forumID}/${newId}`, author, message: `${title} — ${body}`, type: 'New post', timestamp: serverTimestamp() });
+    await CreateNotification({ link: `/channels/${domain}/${forumID}/${newId}`, author, message: `${title} — ${body}`, type: 'New post', timestamp: serverTimestamp(), requestedResponse: requestedResponse });
   } catch (err: any) {
     console.error(err);
     alert(err.message);
@@ -162,6 +168,24 @@ export const GetForum = async({ domain, forumID } : { domain: string, forumID: s
     const ref = doc(db, "channels", domain, "forums", forumID);
     const data = await getDoc(ref);
     return data.data();
+  } catch (err: any) {
+    console.error(err);
+    alert(err.message);
+  }
+}
+
+export const GetAllUsers = async({ domain } : { domain: string }) => { 
+  console.log(domain)
+  try {
+    const q = query(collection(db, "users"), where("domain", "==", domain));
+    const querySnapshot = await getDocs(q);
+    const users: any [] = []
+    querySnapshot.forEach((doc) => {
+      // doc.data() is never undefined for query doc snapshots
+      console.log(doc.id, " => ", doc.data());
+      users.push(doc.data());
+    });
+    return users;
   } catch (err: any) {
     console.error(err);
     alert(err.message);
@@ -212,11 +236,16 @@ export const GetAllComments = ({ domain, postID, forumsID } :{ domain: string, p
 
       dispatch({
         type: FETCH_ALL_COMMENTS,
-        payload: { loading: false, all_comments: sortAfterDate(comments) },
+        payload: { loading: false, all_comments: sortAfterDateDesc(comments) },
       });
     });
   };
 };
+
+const putPrioFirst = (arr: any) => {
+  const result = arr.sort( (a: any,b: any) => !(a.requestedResponse ^ b.requestedResponse) ? 0 : a.requestedResponse ? -1 : 1)
+  return result;
+}
 
 export const GetAllNotifications = ({ userID } :{ userID: string }) => {
   console.log( `users/${userID}/notifications`)
@@ -227,26 +256,33 @@ export const GetAllNotifications = ({ userID } :{ userID: string }) => {
     });
     onSnapshot(collection(db, `users/${userID}/notifications`), (querySnapshot) => {
       const notifications: any[] = [];
+
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         notifications.push({...data, date: data.timestamp.toDate()});
       });
 
+      const afterDate = sortAfterDateAsc(notifications);
+      const prioFirst = putPrioFirst(afterDate);
+
       dispatch({
         type: FETCH_ALL_NOTIFICATIONS,
-        payload: { loading: false, all_notifications: sortAfterDate(notifications) },
+        payload: { loading: false, all_notifications: prioFirst },
       });
     });
   };
 };
 
 
-export const CreateNotification = async ({message, author, link, type, timestamp}: any) => {
+export const CreateNotification = async ({message, author, link, type, timestamp, requestedResponse}: any) => {
   try {
     const querySnapshot = await getDocs(collection(db, "users"));
+    
     querySnapshot.forEach(async (user) => {
       const newId = await firestoreAutoId();
-      await setDoc(doc(db, "users", user.id, 'notifications', newId), {message, author, link, type, id: newId, timestamp, read: false});
+      const requestResponse = requestedResponse !== undefined ? await requestedResponse.some(({email}: {email: string}) => email === author.email) : false;
+
+      await setDoc(doc(db, "users", user.id, 'notifications', newId), {message, author, link, type, id: newId, timestamp, read: false, requestedResponse: requestResponse});
     });
   }
   catch(err: any) {
@@ -256,7 +292,6 @@ export const CreateNotification = async ({message, author, link, type, timestamp
 }
 
 export const RemoveNotification = async ({ userID, id }: {userID: string, id: string}) => {
-  console.log('YOLO', userID, id)
   try {
     await deleteDoc(doc(db, "users", userID, 'notifications', id));
   } catch (err: any) {
