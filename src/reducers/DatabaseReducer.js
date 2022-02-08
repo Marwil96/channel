@@ -1,11 +1,12 @@
-import { FETCH_ALL_POSTS, FETCH_ALL_COMMENTS, FETCH_ALL_FORUMS } from "../actions/constables";
+import { FETCH_ALL_POSTS, FETCH_ALL_COMMENTS, FETCH_ALL_FORUMS, FETCH_ALL_NOTIFICATIONS } from "../actions/constables";
 
 const DatabaseReducer = (
   state = {
     allPosts: [],
     allComments: [],
     allForums: [],
-    loading: false
+    loading: false,
+    allNotifications: []
   },
   action
 ) => {
@@ -25,6 +26,12 @@ const DatabaseReducer = (
     case FETCH_ALL_FORUMS:
       return Object.assign({}, state, {
         allForums: action.payload.all_forums,
+        loading: action.payload.loading,
+      });
+
+    case FETCH_ALL_NOTIFICATIONS:
+      return Object.assign({}, state, {
+        allNotifications: action.payload.all_notifications,
         loading: action.payload.loading,
       });
 

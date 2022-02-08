@@ -44,6 +44,17 @@ const ActionItem = styled('span', {
 
   'svg': {
     marginRight: '1rem'
+  },
+
+  variants: {
+    highlighted: { 
+      'true': {
+        color: '$darkGreen'
+      },
+      'false': {
+
+      }
+    }
   }
 });
 
@@ -141,7 +152,7 @@ const Sidebar = ({user, loading, openPopup} : {user: any, loading: boolean, open
         {/* All Actions */}
         <Subtitle>All Actions</Subtitle>
         <ActionsWrapper>
-          <ActionItem> <ArchiveIcon /> Inbox </ActionItem>
+          <Link to={`/channels/${channelName}`}><ActionItem highlighted={forumID === undefined}> <ArchiveIcon /> Inbox </ActionItem></Link>
         </ActionsWrapper>
         {/* Inbox */}
 

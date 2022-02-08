@@ -13,6 +13,10 @@ const Wrapper = styled('div', {
     backgroundColor: '#E8E8E8',
   },
 
+  '&:last-child': {
+    marginBottom: '1.2em',
+  },
+
   '&:hover': {
     opacity: '0.5',
   }
@@ -37,7 +41,7 @@ const Username = styled('span', {
   marginRight: '$4',
 })
 
-const PostCard = ({title, profileImage, username, body, onClick}: {onClick?: any, title: string, username: string, profileImage: string, body: string}) => {
+const PostCard = ({title, profileImage, username, body, onClick}: {onClick?: any, title: string, username: string, profileImage: string, body?: string}) => {
   return (
     <Wrapper onClick={onClick}>
       <ProfileImage src={profileImage} />

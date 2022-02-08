@@ -17,7 +17,7 @@ const Layout = ({ children } : {children?: any}) => {
   let { channelName, forumID } = useParams();
   const [user, loading, error] = useAuthState(auth);
   const [userDomain, setUserDomain] = useState('')
-  const [userDetails, setUserDetails] = useState({displayName: '', email: '', photoUrl: ''})
+  const [userDetails, setUserDetails] = useState({displayName: '', email: '', photoUrl: '', userID: ''})
   const [openPopup, setOpenPopup] = useState({state: false, type: ''}) ;
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -35,10 +35,10 @@ const Layout = ({ children } : {children?: any}) => {
       // maybe trigger a loading screen
       return;
     }
-    
+    console.log(user)
     if(user) {
      setUserDomain(getDomain({email: user.email}))
-     setUserDetails({displayName: user.displayName, email: user.email, photoUrl: user.photoURL})
+     setUserDetails({displayName: user.displayName, email: user.email, photoUrl: user.photoURL, userID: user.uid})
     }
     if (!user && userDomain !== channelName) navigate("/");
   }, [user, loading]);

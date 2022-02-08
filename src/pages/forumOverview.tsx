@@ -85,12 +85,6 @@ const ForumOverview = () => {
     console.log(allPosts)
   }, [allPosts])
 
-
-
-  const postCommentHelper = async () => {
-    // await PostComment({domain: channelName, forumID: forumID, message: message, author: {...userDetails}})
-  }
-
   return (
     <ForumWrapper >
       <ForumContent style={{display:'flex', flexDirection:'column'}}>

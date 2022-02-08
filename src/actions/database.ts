@@ -15,8 +15,10 @@ import {
   setDoc,
   onSnapshot,
   getDoc,
+  serverTimestamp,
+  deleteDoc,
 } from "firebase/firestore";
-import { FETCH_ALL_POSTS, FETCH_ALL_COMMENTS, FETCH_ALL_FORUMS } from "./constables";
+import { FETCH_ALL_POSTS, FETCH_ALL_COMMENTS, FETCH_ALL_FORUMS, FETCH_ALL_NOTIFICATIONS } from "./constables";
 
 export const firestoreAutoId = () => {
   const CHARS =
@@ -45,6 +47,11 @@ export const db = getFirestore(app);
 
 export const googleProvider = new GoogleAuthProvider();
 
+const sortAfterDate = (arr: any []) => {
+  const result = arr.sort(function(a,b){return a.timestamp < b.timestamp ? 1 : a.timestamp > b.timestamp ? -1 : 0 })
+  return result
+}
+
 export const signInWithGoogle = async () => {
   try {
     const res = await signInWithPopup(auth, googleProvider);
@@ -52,7 +59,7 @@ export const signInWithGoogle = async () => {
     const q = query(collection(db, "users"), where("uid", "==", user.uid));
     const docs = await getDocs(q);
     if (docs.docs.length === 0) {
-      await addDoc(collection(db, "users"), {
+      await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         name: user.displayName,
         authProvider: "google",
@@ -72,6 +79,7 @@ export const addChannel = async ({ domain }: {domain: string}) => {
     if (docs.docs.length === 0) {
       await setDoc(doc(db, "channels", domain), {
         name: domain,
+        timestamp: serverTimestamp()
       });
     }
   } catch (err: any) {
@@ -88,8 +96,11 @@ export const CreateForum = async ({ domain, title, desc, author } : { domain: st
       title: title,
       desc: desc,
       author: author,
-      id: newId
+      id: newId,
+      timestamp: serverTimestamp()
     });
+
+    await CreateNotification({ link: `/channels/${domain}/${newId}`, author, message: `${title} — ${desc}`, type: 'New forum', timestamp: serverTimestamp() });
   } catch (err: any) {
     console.error(err);
     alert(err.message);
@@ -104,23 +115,29 @@ export const CreatePost = async ({ domain, forumID, title, body, author } : { do
       title: title,
       body: body,
       author: author,
-      id: newId
+      id: newId,
+      timestamp: serverTimestamp()
     });
+    await CreateNotification({ link: `/channels/${domain}/${forumID}/${newId}`, author, message: `${title} — ${body}`, type: 'New post', timestamp: serverTimestamp() });
   } catch (err: any) {
     console.error(err);
     alert(err.message);
   }
 };
 
-export const PostComment = async ({ domain, message, postID, author, forumID} : { domain: string, message: string, postID: string, author: any, forumID: string }) => {
+export const PostComment = async ({ domain, message, postID, author, forumID, postTitle} : { domain: string, message: string, postID: string, author: any, forumID: string, postTitle: any }) => {
   try {
     const newId = firestoreAutoId();
     const ref = doc(db, "channels", domain, 'forums', forumID, "posts", postID, "comments", newId);
+    
     await setDoc(ref, {
       message: message,
       author: author,
       id: newId,
+      timestamp: serverTimestamp()
     });
+
+    await CreateNotification({ link: `/channels/${domain}/${forumID}/${postID}`, author, message: `${postTitle} — ${message}`, type: 'New comment', timestamp: serverTimestamp() });
   } catch (err: any) {
     console.error(err);
     alert(err.message);
@@ -128,12 +145,11 @@ export const PostComment = async ({ domain, message, postID, author, forumID} : 
 };
 
 export const GetPost = async({ domain, postID, forumID } : { domain: string, postID: string, forumID: string }) => { 
-  console.log(postID,forumID, domain)
+
   try {
     const ref = doc(db, "channels", domain, "forums", forumID, "posts", postID);
     console.log(ref)
     const data = await getDoc(ref);
-    console.log(data)
     return data.data();
   } catch (err: any) {
     console.error(err);
@@ -181,24 +197,71 @@ export const GetAllForums = ({ domain } : {domain: any}) => {
   }
 }
 
-export const GetAllComments = ({ domain, postID } :{ domain: string, postID: string }) => {
-
+export const GetAllComments = ({ domain, postID, forumsID } :{ domain: string, postID: string, forumsID: string }) => {
   return (dispatch: any) => {
     dispatch({
       type: FETCH_ALL_COMMENTS,
-      payload: { loading: true, all_posts: [] },
+      payload: { loading: true, all_comments: [] },
     });
-    onSnapshot(collection(db, `channels/${domain}/posts/${postID}/comments`), (querySnapshot) => {
+    onSnapshot(collection(db, `channels/${domain}/forums/${forumsID}/posts/${postID}/comments`), (querySnapshot) => {
       const comments: any[] = [];
       querySnapshot.forEach((doc) => {
-        comments.push(doc.data());
+        const data = doc.data();
+        comments.push({...data, date: data.timestamp.toDate()});
       });
 
       dispatch({
         type: FETCH_ALL_COMMENTS,
-        payload: { loading: false, all_comments: comments },
+        payload: { loading: false, all_comments: sortAfterDate(comments) },
       });
     });
   };
+};
+
+export const GetAllNotifications = ({ userID } :{ userID: string }) => {
+  console.log( `users/${userID}/notifications`)
+  return (dispatch: any) => {
+    dispatch({
+      type: FETCH_ALL_NOTIFICATIONS,
+      payload: { loading: true, all_notifications: [] },
+    });
+    onSnapshot(collection(db, `users/${userID}/notifications`), (querySnapshot) => {
+      const notifications: any[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        notifications.push({...data, date: data.timestamp.toDate()});
+      });
+
+      dispatch({
+        type: FETCH_ALL_NOTIFICATIONS,
+        payload: { loading: false, all_notifications: sortAfterDate(notifications) },
+      });
+    });
+  };
+};
+
+
+export const CreateNotification = async ({message, author, link, type, timestamp}: any) => {
+  try {
+    const querySnapshot = await getDocs(collection(db, "users"));
+    querySnapshot.forEach(async (user) => {
+      const newId = await firestoreAutoId();
+      await setDoc(doc(db, "users", user.id, 'notifications', newId), {message, author, link, type, id: newId, timestamp, read: false});
+    });
+  }
+  catch(err: any) {
+    console.error(err);
+    alert(err.message);
+  }
+}
+
+export const RemoveNotification = async ({ userID, id }: {userID: string, id: string}) => {
+  console.log('YOLO', userID, id)
+  try {
+    await deleteDoc(doc(db, "users", userID, 'notifications', id));
+  } catch (err: any) {
+    console.error(err);
+    alert(err.message);
+  }
 };
 

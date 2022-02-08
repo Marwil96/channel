@@ -6,41 +6,92 @@ import { getDomain } from "../helperFunctions";
 import { RootStateOrAny, useDispatch, useSelector } from "react-redux";
 import Layout from "src/components/Layout";
 import Spinner from "src/components/Spinner";
+import { styled } from "src/stitches.config";
+import Button from "src/components/Button";
+import { GetAllNotifications } from "src/actions/database";
+import Accordion from "src/components/Accordion";
+
+
+const Wrapper = styled('section', {
+  width: '100%',
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+});
+
+const Content = styled('div', {
+  width: '100%',
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  maxWidth: '90rem',
+  paddingTop: '$6'
+});
+
+const Title = styled('h1', {
+  fontSize: '$6',
+  fontWeight: '600',
+  marginBottom: '0.6rem',
+});
+
+const Desc = styled('span', {
+  fontSize: '$4',
+  fontWeight: '600',
+  marginBottom: '$6'
+});
+
+const Subtitle = styled('span', {
+  fontSize: '$1',
+  fontWeight: '600',
+  opacity: 0.8,
+  textTransform: 'uppercase',
+  fontFamily: '$mono',
+})
+
+const Header = styled('div', {
+  display: 'flex',
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'flex-end',
+  marginBottom: '0',
+  paddingBottom: '$2',
+  borderBottom: '1px solid $black',
+  width: '100%',
+});
 
 const ChannelOverview = () => {
   let { channelName } = useParams();
-  const {allPosts} = useSelector((state: RootStateOrAny) => state.DatabaseReducer);
+  const {allNotifications} = useSelector((state: RootStateOrAny) => state.DatabaseReducer);
   const {user, userLoading}: {user: any, userLoading:any} = useOutletContext();
-  const [title, setTitle] = useState('')
-  const [body, setBody] = useState('')
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   console.log(user, userLoading)
 
-  const createPostHelper = async () => {
-    // await CreatePost({domain: channelName, title: title, body: body, author: {...user}})
-  }
+  useEffect(() => {
+    console.log(user)
+    if(user?.userID.length > 0 && !userLoading) {
+      dispatch(GetAllNotifications({userID: user.userID}))
+    }
+  }, [userLoading, user])
+  
+  useEffect(() => {
+    console.log(allNotifications)
+  }, [allNotifications])
 
   return (
-    <div>
-      <div style={{display:'flex', flexDirection:'column',}}>
-       <h1>{channelName}</h1>
-        {userLoading ? <Spinner /> :
-          <>
-            <img src={user.photoUrl} style={{width: 40, height: 40}} alt='profile'/>
-            <h2>{user.displayName}</h2>
-            <h3>{user.email}</h3>
-          </>
-        }
-        <input placeholder="title" onChange={(e) => setTitle(e.target.value)} value={title} />
-        <textarea placeholder="body text" onChange={(e) => setBody(e.target.value)} value={body} />
-       <button onClick={() => title.length > 0 && body.length > 0 && createPostHelper()} style={{background: title.length === 0 || body.length === 0 ? 'white' : 'orange'}}>
-         Create Post
-       </button>
-       <h1>Dashboard</h1>
-       {allPosts.map(({title, body, author, id} : {title: string, body: string, author?: any, id: string}, index: any) => <button onClick={() => navigate(`/channels/${channelName}/${id}`)} key={index} style={{display: 'flex', cursor: 'pointer', flexDirection:'column', padding: '24px', background: '#f1f1f1'}}> <img src={author.photoUrl} style={{width: 40, height: 40}} alt='profile'/><h5>{author.email}</h5><h3>{title}</h3><p>{body}</p></button>)}
-      </div>
-    </div>
+    <Wrapper >
+      <Content style={{display:'flex', flexDirection:'column'}}>
+
+        <Title css={{marginBottom: '$6'}}>Inbox</Title>
+
+        <Header>
+          <Subtitle>All Notifications</Subtitle>
+        </Header>
+        {allNotifications.length === 0 ? <Title css={{textAlign: 'center', marginTop: '4.2rem'}}>Empty Inbox</Title> : <Accordion sections={[{title: 'All Notifications', data:allNotifications, userID: user.userID}]} />}
+      </Content>
+    </Wrapper>
   );
 }
 export default ChannelOverview;
