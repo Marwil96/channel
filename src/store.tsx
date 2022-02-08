@@ -1,5 +1,5 @@
 import { configureStore, ThunkAction, Action, getDefaultMiddleware } from '@reduxjs/toolkit'
-import rootReducer from "./reducers/index.js";
+import rootReducer from "./reducers/index";
 
 const customizedMiddleware = getDefaultMiddleware({
     serializableCheck: false

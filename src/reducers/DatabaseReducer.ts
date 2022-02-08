@@ -1,14 +1,23 @@
 import { FETCH_ALL_POSTS, FETCH_ALL_COMMENTS, FETCH_ALL_FORUMS, FETCH_ALL_NOTIFICATIONS } from "../actions/constables";
 
+
+interface InitialState {
+  allPosts: any [],
+  allComments: any [],
+  allForums: any [],
+  loading: boolean,
+  allNotifications: any []
+}
+
 const DatabaseReducer = (
-  state = {
+  state: InitialState = {
     allPosts: [],
     allComments: [],
     allForums: [],
     loading: false,
     allNotifications: []
   },
-  action
+  action: any
 ) => {
   switch (action.type) {
     case FETCH_ALL_POSTS:

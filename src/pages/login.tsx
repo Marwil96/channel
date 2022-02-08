@@ -9,7 +9,7 @@ function Login() {
 
   useEffect(() => {
     if (loading) {
-      // maybe trigger a loading screen
+      // Trigger Loading screen?
       return;
     }
     if (user) navigate("/dashboard");
