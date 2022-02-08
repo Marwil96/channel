@@ -248,7 +248,6 @@ const putPrioFirst = (arr: any) => {
 }
 
 export const GetAllNotifications = ({ userID } :{ userID: string }) => {
-  console.log( `users/${userID}/notifications`)
   return (dispatch: any) => {
     dispatch({
       type: FETCH_ALL_NOTIFICATIONS,

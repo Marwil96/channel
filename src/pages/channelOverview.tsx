@@ -61,24 +61,17 @@ const Header = styled('div', {
 });
 
 const ChannelOverview = () => {
-  let { channelName } = useParams();
-  const {allNotifications} = useSelector((state: RootStateOrAny) => state.DatabaseReducer);
+  const { allNotifications } = useSelector((state: RootStateOrAny) => state.DatabaseReducer);
   const {user, userLoading}: {user: any, userLoading:any} = useOutletContext();
-  const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  console.log(user, userLoading)
 
   useEffect(() => {
-    console.log(user)
     if(user?.userID.length > 0 && !userLoading) {
       dispatch(GetAllNotifications({userID: user.userID}))
     }
   }, [userLoading, user])
   
-  useEffect(() => {
-    console.log(allNotifications)
-  }, [allNotifications])
 
   return (
     <Wrapper >

@@ -61,7 +61,7 @@ const ButtonWrapper = styled('button', {
   cursor: 'pointer',
 });
 
-const NotificationRow = ({message, author, link, type, timestamp, date, id, userID, requestedResponse}: any) => {
+const NotificationRow = ({message, author, link, type, timestamp, date, id, userID, requestedResponse}: {message: string, link: string, author: any, type: string, timestamp: any, date: any, userID: string, id: string, requestedResponse?: any}) => {
   const dateString = new Date(date).toLocaleString();
   const navigate = useNavigate();
   
@@ -71,13 +71,12 @@ const NotificationRow = ({message, author, link, type, timestamp, date, id, user
         <ProfileImage src={author.photoUrl} />
         <div style={{display: 'flex', flexDirection:'column', width: '20rem', marginRight: '2rem'}}>
           <Lable>{type} by <span>{author.displayName}</span> at {dateString}</Lable>
-          {/* <Username>{author.displayName}</Username> */}
         </div>
         <div style={{display: 'flex', flexDirection:'column'}}>
-          {/* <Lable>Content</Lable> */}
           <Title>{message}</Title>
         </div>
       </div>
+
       <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
         {requestedResponse && <ButtonWrapper css={{marginRight: '1.4rem', backgroundColor:'$darkGreen', border: 0, '&:hover': {opacity: 0.5}}} onClick={() => navigate(link)}>Response requested by {author.displayName}</ButtonWrapper>}
         {!requestedResponse && <Lable css={{marginRight: '$3', fontStyle: 'normal', fontFamily: '$mono', textDecoration: 'underline', cursor: 'pointer', '&:hover': {opacity: 0.5}}} onClick={() => navigate(link)}>Go to {type}</Lable>}
