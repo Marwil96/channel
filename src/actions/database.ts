@@ -69,6 +69,7 @@ export const signInWithGoogle = async () => {
         name: user.displayName,
         authProvider: "google",
         email: user.email,
+        profileImage: user.photoURL,
         domain: user.email.split('@')[1]
       });
     }

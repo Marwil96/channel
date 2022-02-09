@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { styled, keyframes } from '@stitches/react';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
+//ts-ignore
+import { MentionsInput, Mention } from 'react-mentions'
 import { CreateForum, CreatePost, GetAllUsers } from 'src/actions/database';
 
 const overlayShow = keyframes({
@@ -134,9 +136,11 @@ const IconButton = styled('button', {
 const Fieldset = styled('fieldset', {
   all: 'unset',
   display: 'flex',
-  gap: 20,
-  alignItems: 'center',
-  marginBottom: 15,
+  flexDirection: 'column',
+  gap: 8,
+  alignItems: 'flex-start',
+  marginBottom: '$5',
+  width: '100%',
 });
 
 const Label = styled('label', {
@@ -144,23 +148,21 @@ const Label = styled('label', {
   color: '#000',
   fontFamily: '$mono',
   width: 90,
-  textAlign: 'right',
+  textAlign: 'left',
 });
 
 const Input = styled('input', {
   all: 'unset',
-  width: '100%',
+  width: '-webkit-fill-available',
   flex: '1',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  borderRadius: 4,
-  padding: '0 10px',
-  fontSize: 15,
+  fontSize: '$2',
   lineHeight: 1,
+  padding: '0.8rem $1',
   color: '#000',
   boxShadow: '0 0 0 1px #000',
-  height: 35,
 
   '&:focus': { boxShadow: `0 0 0 2px #000` },
 });
@@ -202,27 +204,62 @@ const UserBox = styled('div', {
   cursor: 'pointer'
 })
 
+const SuggestionWrapper = styled('div', { 
+  padding: '1rem', 
+  display: 'flex', 
+  alignItems: 'center', 
+  backgroundColor: '#f1f1f1',
+  
+  '&:hover': {
+    opacity: 0.7,
+  },
+
+  "&:focus": {
+    opacity: 0.5,
+  }
+})
+
 const CreatePostPopup = ({open, close, user, domain, forumID}: {open?: boolean, close?: any, user: any, domain: string, forumID?: string }) => {
   const [postSubject, setPostSubject] = useState('');
   const [body, setBody] = useState("");
   const [userTerm, setUserTerm] = useState('');
   const [allUsers, setAllUsers] = useState([]);
+  const [allUsersUnedited, setAllUsersUnedited] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([])
   const [selectedUsers, setSelectedUsers] = useState([])
 
   useEffect(() => {
     const asyncFunc = async () => { 
       const result = await GetAllUsers({domain})
-      console.log(result)
-      setAllUsers(result)
+      const reMadeArray = result.map((user: any, index: any) => ({...user, id: index, display: user.email}))
+      setAllUsers(reMadeArray)
+      setAllUsersUnedited(reMadeArray)
       setFilteredUsers(result)
     } 
     asyncFunc()
   }, [])
 
-  useEffect(() => {
-    setFilteredUsers(allUsers.filter(user => user.email.toLowerCase().includes(userTerm.toLowerCase())))
-  }, [userTerm])
+
+  const handleChange = async (value: string, type: string) => { 
+    const regex = /[^{}]+(?=})/g;
+    let mentions = value.match(regex);
+    const uniqueMentions = await uniq(mentions ? mentions : [])
+    
+    if(type === 'body') {
+      setBody(value)
+      //@ts-ignore
+      setSelectedUsers(mentions ? uniqueMentions.map(mention => allUsersUnedited[parseInt(mention)] ) : []);
+    } else {
+      setUserTerm(value)
+    }
+
+  }
+
+  const uniq = async (a: any) => {
+    return await a.sort().filter((item:any, pos:any, ary:any) => {
+        return !pos || item !== ary[pos - 1];
+    });
+  }
 
   return (
     <Dialog open={open}>
@@ -239,22 +276,85 @@ const CreatePostPopup = ({open, close, user, domain, forumID}: {open?: boolean, 
         <>
           <UsersSubtitle style={{marginBottom: '0.8rem', display: 'block'}}>Requested for response</UsersSubtitle>
           <UsersWrapper style={{marginBottom: '2rem'}}>
-            {selectedUsers.map((user: any) => <UserBox onClick={() => {setSelectedUsers(selectedUsers.filter((item) => item.email !== user.email)); setFilteredUsers([...filteredUsers, {...user}]); setAllUsers([...allUsers, {...user}]) }}>{user.email}</UserBox>)}
+            {selectedUsers.map((user: any) => <UserBox onClick={() => {setSelectedUsers(selectedUsers.filter((item) => item.email !== user.email))}}>{user.email}</UserBox>)}
           </UsersWrapper>
         </>}
-        <UsersSubtitle style={{marginBottom: '0.8rem', display: 'block'}}>All users</UsersSubtitle> 
-        <UsersWrapper>
-          {filteredUsers.map((item: any) => <UserBox onClick={() => {setSelectedUsers([...selectedUsers, {...item}]); setFilteredUsers(selectedUsers.filter((item) => item.email !== user.email)); setAllUsers(selectedUsers.filter((item) => item.email !== user.email))  }}>{item.email}</UserBox>)}
-        </UsersWrapper>
-        <Fieldset>
+        {/* <Fieldset>
           <Label htmlFor="requestResponse">Request Response</Label>
-          <Input id='requestResponse' placeholder='Search after users' onChange={(e) => setUserTerm(e.target.value)} value={userTerm} />
+          <MentionsInput 
+          value={userTerm}
+          singleLine={true}
+          onChange={(e: any) => handleChange(e.target.value, 'subject')} 
+          style={{width: '100%'}} 
+        >
+          <Mention
+            trigger="@"
+            data={allUsers}
+            appendSpaceOnAdd={true}
+            renderSuggestion={(entry: any) => {
+               return (
+                  <span style={{padding: '1rem', display: 'flex', alignItems: 'center', backgroundColor: '#f1f1f1'}}>
+                    <img style={{width: 30, height: 30, marginRight: '1rem', padding: 0, borderRadius: '100%'}} src={allUsers[entry.id].profileImage} alt='profile' />
+                    { entry.display }
+                  </span>
+                );
+            }}
+           markup="[__display__]{__id__}"
+           displayTransform={(id: any) => `@${allUsersUnedited[id]?.name}`}
+
+            // displayTransform={(e) => e}
+            style={{background: '#f1f1f1', padding: 5, margin: -5, borderRadius: 4, cursor: 'pointer', display: 'block', width: 'fit-content'}}
+            //@ts-ignore
+            onAdd={(user) => {setSelectedUsers([...selectedUsers, {...allUsers[user]}]); setFilteredUsers(selectedUsers.filter((item) => item.email !== allUsers[user].email)); setAllUsers(selectedUsers.filter((item) => item.email !== allUsers[user].email))} }
+            // renderSuggestion={this.renderUserSuggestion}
+          />
+        </MentionsInput>
           
-        </Fieldset>
+        </Fieldset> */}
 
         <Fieldset>
           <Label htmlFor="body">Forum Body</Label>
-          <TextArea id="body" value={body} onChange={(e) => setBody(e.target.value)} placeholder="Desc" />
+          {/* <TextArea id="body" value={body} onChange={(e) => setBody(e.target.value)} placeholder="Desc" /> */}
+          <MentionsInput 
+            value={body}
+            onChange={(e: any) => handleChange(e.target.value, 'body')} 
+            style={{width: '-webkit-fill-available', height: '20rem', padding: '0.8rem 1.6rem'}} 
+          >
+            <Mention
+              trigger="@@"
+              data={allUsers}
+              appendSpaceOnAdd={true}
+              renderSuggestion={(entry: any) => {
+                return (
+                    <SuggestionWrapper>
+                      <img style={{width: 30, height: 30, marginRight: '1rem', padding: 0, borderRadius: '100%'}} src={allUsers[entry.id].profileImage} alt='profile' />
+                      { entry.display }
+                    </SuggestionWrapper>
+                  );
+              }}
+            markup="[__display__]{__id__}"
+            displayTransform={(id: any) => `@@${allUsersUnedited[id]?.name}`}
+            onAdd={(user: any) => {setSelectedUsers([...selectedUsers, {...allUsers[user]}])} }
+            />
+
+            <Mention
+              // trigger={/^[^@]*@[^@]*$/}
+              trigger='b'
+              data={allUsers}
+              appendSpaceOnAdd={true}
+              renderSuggestion={(entry: any) => {
+                return (
+                    <SuggestionWrapper>
+                      <img style={{width: 30, height: 30, marginRight: '1rem', padding: 0, borderRadius: '100%'}} src={allUsers[entry.id].profileImage} alt='profile' />
+                      { entry.display }
+                    </SuggestionWrapper>
+                  );
+              }}
+
+            displayTransform={(id: any) => `@${allUsersUnedited[id]?.name}`}
+            // onAdd={(user: any) => console.log(user) }
+            />
+          </MentionsInput>
         </Fieldset>
 
         <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
