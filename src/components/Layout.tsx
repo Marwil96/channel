@@ -48,7 +48,7 @@ const Layout = ({ children } : {children?: any}) => {
       <Sidebar user={userDetails} loading={loading} openPopup={setOpenPopup} />
       {<CreateForumPopup open={openPopup.type === 'createForum' && openPopup.state} domain={channelName} user={userDetails} close={() => setOpenPopup({state: false, type: ''})} />}
       {<CreatePostPopup open={openPopup.type === 'createPost' && openPopup.state} domain={channelName} user={userDetails} forumID={forumID} close={() => setOpenPopup({state: false, type: ''})} />}
-      <Outlet context={{user: userDetails, userLoading: loading, openPopup: setOpenPopup}}/>
+      <Outlet context={{user: userDetails, userLoading: loading, openPopup: setOpenPopup, popupState: openPopup.state}}/>
     </Wrapper>
   )
 }

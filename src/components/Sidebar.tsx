@@ -157,7 +157,7 @@ const Sidebar = ({user, loading, openPopup} : {user: any, loading: boolean, open
         {/* Inbox */}
 
         {/* All Threads */}
-        <Subtitle>All Forums</Subtitle>
+        <Subtitle>All Channels</Subtitle>
           <ActionsWrapper>
            {allForums.map(({title, id} : {title: string, id: string }) => <Link to={`/channels/${channelName}/${id}`}><ComposedForumItem highlighted={forumID === id}>{title}</ComposedForumItem></Link>)}
            <span style={{fontSize:'1.4rem', textDecoration:'underline', cursor: 'pointer'}} onClick={() => openPopup({state: true, type: 'createForum'})}>Start Forum</span>

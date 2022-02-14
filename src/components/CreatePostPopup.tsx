@@ -141,13 +141,21 @@ const Fieldset = styled('fieldset', {
   alignItems: 'flex-start',
   marginBottom: '$5',
   width: '100%',
+
+  // '.mentions__request-response': {
+  //   display: 'flex',
+  //   alignItems: 'center',
+  //   justifyContent: 'center',
+  //   height: '100%',
+  //   width: '100%',
+  //   background: 'blue',
+  // }
 });
 
 const Label = styled('label', {
   fontSize: '$2',
   color: '#000',
   fontFamily: '$mono',
-  width: 90,
   textAlign: 'left',
 });
 
@@ -192,7 +200,7 @@ const UsersSubtitle = styled('span', {
 });
 const UsersWrapper = styled('div', {
   display: 'flex',
-  marginBottom: '2rem'
+  // marginBottom: '2rem'
 })
 
 const UserBox = styled('div', {
@@ -219,6 +227,19 @@ const SuggestionWrapper = styled('div', {
   }
 })
 
+const SuggestionItemsWrapper = styled('div', {
+  display: 'flex',
+  width: '100%',
+  borderBottom: '1px solid black',
+  marginBottom: '2rem',
+  paddingBottom: '0.6rem',
+
+  'input': {
+    border: '0',
+    outline: 0,
+  }
+})
+
 const CreatePostPopup = ({open, close, user, domain, forumID}: {open?: boolean, close?: any, user: any, domain: string, forumID?: string }) => {
   const [postSubject, setPostSubject] = useState('');
   const [body, setBody] = useState("");
@@ -227,6 +248,7 @@ const CreatePostPopup = ({open, close, user, domain, forumID}: {open?: boolean, 
   const [allUsersUnedited, setAllUsersUnedited] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([])
   const [selectedUsers, setSelectedUsers] = useState([])
+  const [notifyUsers, setNotifyUsers] = useState([]);
 
   useEffect(() => {
     const asyncFunc = async () => { 
@@ -240,19 +262,44 @@ const CreatePostPopup = ({open, close, user, domain, forumID}: {open?: boolean, 
   }, [])
 
 
-  const handleChange = async (value: string, type: string) => { 
+  const handleChange = async (value: string, type: string, newPlainTextValue: string) => { 
     const regex = /[^{}]+(?=})/g;
     let mentions = value.match(regex);
-    const uniqueMentions = await uniq(mentions ? mentions : [])
-    
+
     if(type === 'body') {
       setBody(value)
+
       //@ts-ignore
-      setSelectedUsers(mentions ? uniqueMentions.map(mention => allUsersUnedited[parseInt(mention)] ) : []);
+      if(newPlainTextValue.split('[')[0] === '@@') {
+        const uniqueMentions = await uniq(mentions ? mentions : [])
+        console.log('UNIQUEMENTIONS', uniqueMentions)
+        setSelectedUsers(uniqueMentions ? uniqueMentions.map((mention: any) => allUsersUnedited[parseInt(mention)] ) : []);
+      } 
+
+      if(newPlainTextValue.split('[')[0] === '@') {
+        console.log('here', newPlainTextValue)
+        const uniqueMentions = await uniq(mentions ? mentions : [])
+        setNotifyUsers(uniqueMentions ? uniqueMentions.map((mention: any) => allUsersUnedited[parseInt(mention)] ) : []);
+      }
+      
     } else {
       setUserTerm(value)
     }
+  }
 
+  const addUserHelper = async (user: any, type: string) => {
+    const newSelectedUsers = [...selectedUsers, {...allUsers[user]}]
+    const uniqueMentions = await removeDuplicates(newSelectedUsers)
+    
+    if(type === 'request_response') {
+      setSelectedUsers(uniqueMentions);
+    } else { 
+      setNotifyUsers(uniqueMentions);
+    }
+  }
+
+  const removeDuplicates = (arr: any) => { 
+    return arr.filter((v:any,i:any,a: any)=>a.findIndex((t: any)=>(t.id===v.id))===i);
   }
 
   const uniq = async (a: any) => {
@@ -272,93 +319,95 @@ const CreatePostPopup = ({open, close, user, domain, forumID}: {open?: boolean, 
           <Label htmlFor="postSubject">Subject</Label>
           <Input id="postSubject" value={postSubject} onChange={(e) => setPostSubject(e.target.value)} placeholder="Post Subject" />
         </Fieldset>
-        {selectedUsers.length !== 0 && 
-        <>
-          <UsersSubtitle style={{marginBottom: '0.8rem', display: 'block'}}>Requested for response</UsersSubtitle>
-          <UsersWrapper style={{marginBottom: '2rem'}}>
-            {selectedUsers.map((user: any) => <UserBox onClick={() => {setSelectedUsers(selectedUsers.filter((item) => item.email !== user.email))}}>{user.email}</UserBox>)}
-          </UsersWrapper>
-        </>}
-        {/* <Fieldset>
-          <Label htmlFor="requestResponse">Request Response</Label>
-          <MentionsInput 
-          value={userTerm}
-          singleLine={true}
-          onChange={(e: any) => handleChange(e.target.value, 'subject')} 
-          style={{width: '100%'}} 
-        >
-          <Mention
-            trigger="@"
-            data={allUsers}
-            appendSpaceOnAdd={true}
-            renderSuggestion={(entry: any) => {
-               return (
-                  <span style={{padding: '1rem', display: 'flex', alignItems: 'center', backgroundColor: '#f1f1f1'}}>
-                    <img style={{width: 30, height: 30, marginRight: '1rem', padding: 0, borderRadius: '100%'}} src={allUsers[entry.id].profileImage} alt='profile' />
-                    { entry.display }
-                  </span>
-                );
-            }}
-           markup="[__display__]{__id__}"
-           displayTransform={(id: any) => `@${allUsersUnedited[id]?.name}`}
 
-            // displayTransform={(e) => e}
-            style={{background: '#f1f1f1', padding: 5, margin: -5, borderRadius: 4, cursor: 'pointer', display: 'block', width: 'fit-content'}}
-            //@ts-ignore
-            onAdd={(user) => {setSelectedUsers([...selectedUsers, {...allUsers[user]}]); setFilteredUsers(selectedUsers.filter((item) => item.email !== allUsers[user].email)); setAllUsers(selectedUsers.filter((item) => item.email !== allUsers[user].email))} }
-            // renderSuggestion={this.renderUserSuggestion}
-          />
-        </MentionsInput>
-          
-        </Fieldset> */}
+        <Fieldset>
+          <Label>Notify</Label>
+          <UsersWrapper style={{ marginRight: '1.2rem' }}>
+            {notifyUsers.map((user: any) => <UserBox onClick={() => {setNotifyUsers(selectedUsers.filter((item) => item.email !== user.email))}}>{user.email}</UserBox>)}
+          </UsersWrapper>
+        </Fieldset>
+        <Fieldset>
+          <Label htmlFor="requestResponse">Request Response</Label>
+          <SuggestionItemsWrapper>
+            <UsersWrapper style={{ marginRight: '1.2rem' }}>
+              {selectedUsers.map((user: any) => <UserBox onClick={() => {setSelectedUsers(selectedUsers.filter((item) => item.email !== user.email))}}>{user.email}</UserBox>)}
+            </UsersWrapper>
+            <MentionsInput 
+              value={userTerm}
+              singleLine={true}
+              onChange={(e, newPlainTextValue): any => handleChange(e.target.value, 'subject', newPlainTextValue)} 
+              style={{width: '100%'}} 
+              placeholder='Add users'
+            >
+              <Mention
+                trigger="@@"
+                data={allUsers}
+                appendSpaceOnAdd={true}
+                renderSuggestion={(entry: any) => {
+                  return (
+                      <span style={{padding: '1rem', display: 'flex', alignItems: 'center', backgroundColor: '#f1f1f1'}}>
+                        <img style={{width: 30, height: 30, marginRight: '1rem', padding: 0, borderRadius: '100%'}} src={allUsers[entry.id].profileImage} alt='profile' />
+                        { entry.display }
+                      </span>
+                    );
+                }}
+                markup="[__display__]{__id__}"
+                displayTransform={(id: any) => `@@${allUsersUnedited[id]?.name}`}
+                //@ts-ignore
+                onAdd={(user: any) => { addUserHelper(user, 'request_response'); setUserTerm('')}}            
+              />
+            </MentionsInput>
+          </SuggestionItemsWrapper>
+        </Fieldset>
 
         <Fieldset>
           <Label htmlFor="body">Forum Body</Label>
           {/* <TextArea id="body" value={body} onChange={(e) => setBody(e.target.value)} placeholder="Desc" /> */}
           <MentionsInput 
             value={body}
-            onChange={(e: any) => handleChange(e.target.value, 'body')} 
+            onChange={(e, newPlainTextValue): any => handleChange(e.target.value, 'body', newPlainTextValue)} 
             style={{width: '-webkit-fill-available', height: '20rem', padding: '0.8rem 1.6rem'}} 
           >
-            <Mention
-              trigger="@@"
-              data={allUsers}
-              appendSpaceOnAdd={true}
-              renderSuggestion={(entry: any) => {
-                return (
-                    <SuggestionWrapper>
-                      <img style={{width: 30, height: 30, marginRight: '1rem', padding: 0, borderRadius: '100%'}} src={allUsers[entry.id].profileImage} alt='profile' />
-                      { entry.display }
-                    </SuggestionWrapper>
-                  );
-              }}
-            markup="[__display__]{__id__}"
-            displayTransform={(id: any) => `@@${allUsersUnedited[id]?.name}`}
-            onAdd={(user: any) => {setSelectedUsers([...selectedUsers, {...allUsers[user]}])} }
-            />
 
-            <Mention
-              // trigger={/^[^@]*@[^@]*$/}
-              trigger='b'
-              data={allUsers}
-              appendSpaceOnAdd={true}
-              renderSuggestion={(entry: any) => {
-                return (
-                    <SuggestionWrapper>
-                      <img style={{width: 30, height: 30, marginRight: '1rem', padding: 0, borderRadius: '100%'}} src={allUsers[entry.id].profileImage} alt='profile' />
-                      { entry.display }
-                    </SuggestionWrapper>
-                  );
-              }}
-
+          <Mention
+            trigger="@"
+            markup="@[__display__]{__id__}"
+            data={allUsers}
+            className="mentions__mention"
+            onAdd={(user: any) =>  addUserHelper(user, 'notify')}
             displayTransform={(id: any) => `@${allUsersUnedited[id]?.name}`}
-            // onAdd={(user: any) => console.log(user) }
-            />
+            renderSuggestion={(entry: any) => {
+              return (
+                  <SuggestionWrapper>
+                    <img style={{width: 30, height: 30, marginRight: '1rem', padding: 0, borderRadius: '100%'}} src={allUsers[entry.id].profileImage} alt='profile' />
+                    { entry.display }
+                  </SuggestionWrapper>
+                );
+            }}
+          />
+
+          <Mention
+            trigger="@@"
+            markup="@@[__display__]{__id__}"
+            data={allUsers}
+            className="mentions__request-response"
+            // style={{ backgroundColor: '#d1c4e9' }}
+            onAdd={(user: any) =>  addUserHelper(user, 'request_response')}
+            displayTransform={(id: any) => `@@${allUsersUnedited[id]?.name}`}
+            renderSuggestion={(entry: any) => {
+              return (
+                  <SuggestionWrapper>
+                    <img style={{width: 30, height: 30, marginRight: '1rem', padding: 0, borderRadius: '100%'}} src={allUsers[entry.id].profileImage} alt='profile' />
+                    { entry.display }
+                  </SuggestionWrapper>
+                );
+            }}
+          />
           </MentionsInput>
         </Fieldset>
 
         <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
-          <DialogClose asChild onClick={async () =>{ await CreatePost({ domain: domain, forumID: forumID, title: postSubject, body: body, author: user, requestedResponse: selectedUsers}); close()}}>
+          <DialogClose asChild onClick={async () =>{ await CreatePost({ domain: domain, forumID: forumID, title: postSubject, body: body, author: user, requestedResponse: selectedUsers, notify: notifyUsers}); close()}}>
             <Button aria-label="Close" variant="green">
               Create Post
             </Button>

@@ -26,7 +26,8 @@ const Content = styled('div', {
   display: 'flex',
   flexDirection: 'column',
   maxWidth: '90rem',
-  paddingTop: '$6'
+  paddingTop: '$6',
+  paddingBottom: '10rem'
 });
 
 const Title = styled('h1', {
