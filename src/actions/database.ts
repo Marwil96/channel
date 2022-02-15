@@ -35,13 +35,15 @@ export const firestoreAutoId = () => {
 };
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD-t3PCdY_Tx4vuZxNmCopXBCYZGdufF2M",
+  apiKey: process.env.REACT_APP_API_KEY,
   authDomain: "levels-code-test.firebaseapp.com",
   projectId: "levels-code-test",
   storageBucket: "levels-code-test.appspot.com",
   messagingSenderId: "927936069755",
-  appId: "1:927936069755:web:53b341f54e4321537fe2de",
+  appId: process.env.REACT_APP_APP_ID,
 };
+
+console.log('HALLOOO', process.env.REACT_APP_API_KEY)
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
