@@ -1,4 +1,4 @@
-function actions(navigate, domain) {
+function actions(navigate, domain, openPopup) {
   return [
     {
       id: "home",
@@ -14,7 +14,7 @@ function actions(navigate, domain) {
       name: "Create Post",
       shortcut: ["p"],
       keywords: "create post new",
-      perform: () => console.log('You clicked on "Contact" action'),
+      perform: () => openPopup({ type: "createPost", state: true, data: {noForumId: true} }),
       type: "link",
       section: "actions",
     },
@@ -23,7 +23,7 @@ function actions(navigate, domain) {
       name: "Create Channel",
       shortcut: ["c"],
       keywords: "create forum channel new",
-      perform: () => console.log('You clicked on "Contact" action'),
+      perform: () => openPopup({ type: "createForum", state: true }),
       type: "link",
       section: "actions",
     },

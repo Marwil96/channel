@@ -5,6 +5,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 //ts-ignore
 import { MentionsInput, Mention } from 'react-mentions'
 import { CreateForum, CreatePost, GetAllUsers } from 'src/actions/database';
+import { RootStateOrAny, useSelector } from 'react-redux';
 
 const overlayShow = keyframes({
   '0%': { opacity: 0 },
@@ -240,15 +241,19 @@ const SuggestionItemsWrapper = styled('div', {
   }
 })
 
-const CreatePostPopup = ({open, close, user, domain, forumID}: {open?: boolean, close?: any, user: any, domain: string, forumID?: string }) => {
+const CreatePostPopup = ({open, close, user, domain, forumID, popupData}: {open?: boolean, close?: any, user: any, domain: string, forumID?: string, popupData?: any }) => {
+  const { allForums } = useSelector((state: RootStateOrAny) => state.DatabaseReducer);
+  console.log('FORUM ID', forumID)
   const [postSubject, setPostSubject] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [body, setBody] = useState("");
   const [userTerm, setUserTerm] = useState('');
   const [allUsers, setAllUsers] = useState([]);
   const [allUsersUnedited, setAllUsersUnedited] = useState([]);
-  const [filteredUsers, setFilteredUsers] = useState([])
+  const [filteredChannels, setFilteredChannels] = useState([allForums])
   const [selectedUsers, setSelectedUsers] = useState([])
   const [notifyUsers, setNotifyUsers] = useState([]);
+  const [selectedChannel, setSelectedChannel] = useState([]);
 
   useEffect(() => {
     const asyncFunc = async () => { 
@@ -256,7 +261,6 @@ const CreatePostPopup = ({open, close, user, domain, forumID}: {open?: boolean, 
       const reMadeArray = result.map((user: any, index: any) => ({...user, id: index, display: user.email}))
       setAllUsers(reMadeArray)
       setAllUsersUnedited(reMadeArray)
-      setFilteredUsers(result)
     } 
     asyncFunc()
   }, [])
@@ -308,10 +312,23 @@ const CreatePostPopup = ({open, close, user, domain, forumID}: {open?: boolean, 
     });
   }
 
+  useEffect(() => {
+    setFilteredChannels(allForums.filter((forum: any) => forum.title.toLowerCase().includes(searchTerm.toLowerCase())));
+  }, [searchTerm])
+
   return (
     <Dialog open={open}>
       <DialogContent >
         <DialogTitle>Create Post</DialogTitle>
+        <UsersWrapper style={{marginBottom: '1.6rem'}}>
+          {selectedChannel.length > 0 && <UserBox css={{marginRight: '1.2rem', background:'$darkGreen', '&:hover': {background: '#f7f7f7', outline: '1px solid black'}}} onClick={() => setSelectedChannel([])}>{selectedChannel[0].title}</UserBox> }{filteredChannels.map(({ title, id }: { title?: string, id?: string }) => <UserBox css={{marginRight: '1.2rem', '&:hover': {background: '#f7f7f7', outline: '1px solid black'}}} onClick={() => setSelectedChannel([{title, id}])}>{title}</UserBox>)}
+        </UsersWrapper>
+        {popupData.noForumId && (
+          <Fieldset>
+            <Label htmlFor="selectChannel">For which channel</Label>
+            <Input id="selectChannel" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search for Channel" />
+          </Fieldset>  
+        )}
         {/* <DialogDescription>
           Make changes to your profile here. Click save when you're done.
         </DialogDescription> */}
@@ -407,7 +424,7 @@ const CreatePostPopup = ({open, close, user, domain, forumID}: {open?: boolean, 
         </Fieldset>
 
         <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
-          <DialogClose asChild onClick={async () =>{ await CreatePost({ domain: domain, forumID: forumID, title: postSubject, body: body, author: user, requestedResponse: selectedUsers, notify: notifyUsers}); close()}}>
+          <DialogClose asChild onClick={async () =>{ await CreatePost({ domain: domain, forumID: selectedChannel.length > 0 ? selectedChannel[0].id : forumID, title: postSubject, body: body, author: user, requestedResponse: selectedUsers, notify: notifyUsers}); close()}}>
             <Button aria-label="Close" variant="green">
               Create Post
             </Button>

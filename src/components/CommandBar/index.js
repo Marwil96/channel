@@ -84,7 +84,7 @@ function InnerCommandBar() {
   );
 }
 
-export default function CommandBar({ children }) {
+export default function CommandBar({ children, openPopup }) {
   const navigate = useNavigate();
   let { channelName } = useParams();
 
@@ -92,7 +92,7 @@ export default function CommandBar({ children }) {
   return (
     <AnimatePresence exitBeforeEnter>
       <KBarProvider
-        actions={actions(navigate, channelName)}
+        actions={actions(navigate, channelName, openPopup)}
         options={{
           enabledHistory: true,
         }}

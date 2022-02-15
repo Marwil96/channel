@@ -19,7 +19,7 @@ const Layout = ({ children } : {children?: any}) => {
   const [user, loading, error] = useAuthState(auth);
   const [userDomain, setUserDomain] = useState('')
   const [userDetails, setUserDetails] = useState({displayName: '', email: '', photoUrl: '', userID: ''})
-  const [openPopup, setOpenPopup] = useState({state: false, type: ''}) ;
+  const [openPopup, setOpenPopup] = useState({state: false, type: '', data: {}}) ;
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -46,11 +46,11 @@ const Layout = ({ children } : {children?: any}) => {
   }, [user, loading]);
 
   return (
-    <CommandBar>
+    <CommandBar openPopup={setOpenPopup}>
       <Wrapper>
         <Sidebar user={userDetails} loading={loading} openPopup={setOpenPopup} />
-        {<CreateForumPopup open={openPopup.type === 'createForum' && openPopup.state} domain={channelName} user={userDetails} close={() => setOpenPopup({state: false, type: ''})} />}
-        {<CreatePostPopup open={openPopup.type === 'createPost' && openPopup.state} domain={channelName} user={userDetails} forumID={forumID} close={() => setOpenPopup({state: false, type: ''})} />}
+        {<CreateForumPopup open={openPopup.type === 'createForum' && openPopup.state} domain={channelName} user={userDetails} close={() => setOpenPopup({state: false, type: '', data: {}})} />}
+        {<CreatePostPopup open={openPopup.type === 'createPost' && openPopup.state} domain={channelName} user={userDetails}  popupData={openPopup.data} forumID={forumID} close={() => setOpenPopup({state: false, type: '', data: {}})} />}
         <Outlet context={{user: userDetails, userLoading: loading, openPopup: setOpenPopup, popupState: openPopup.state}}/>
       </Wrapper>
     </CommandBar>
