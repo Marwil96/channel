@@ -22,6 +22,7 @@ export const { styled, getCssText } : {styled: any, getCssText: any} = createSti
       // darkGreen: '#05473C',
       darkGreen: '#42bfa3',
       vibrantGreen: '#54ECCA',
+      secondary: '#868686',
     },
     fontSizes: {
       1: '1.2rem',

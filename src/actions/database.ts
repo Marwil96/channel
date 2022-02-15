@@ -134,7 +134,7 @@ export const CreatePost = async ({ domain, forumID, title, body, author, request
   }
 };
 
-export const PostComment = async ({ domain, message, postID, author, forumID, postTitle} : { domain: string, message: string, postID: string, author: any, forumID: string, postTitle: any }) => {
+export const PostComment = async ({ domain, message, postID, author, forumID, postTitle, requestedResponse, notify} : { domain: string, message: string, postID: string, author: any, forumID: string, postTitle: any, requestedResponse: any, notify: any }) => {
   try {
     const newId = firestoreAutoId();
     const ref = doc(db, "channels", domain, 'forums', forumID, "posts", postID, "comments", newId);
@@ -146,20 +146,26 @@ export const PostComment = async ({ domain, message, postID, author, forumID, po
       timestamp: serverTimestamp()
     });
 
-    await CreateNotification({ link: `/channels/${domain}/${forumID}/${postID}`,channelID: forumID, postID, commentID: newId,  author, message: `${postTitle} — ${message}`, type: 'New comment', timestamp: serverTimestamp() });
+    await CreateNotification({ link: `/channels/${domain}/${forumID}/${postID}`,channelID: forumID, postID, commentID: newId,  author, message: `${postTitle} — ${message}`, type: 'New comment', timestamp: serverTimestamp(), requestedResponse: requestedResponse, notify: notify });
   } catch (err: any) {
     console.error(err);
     alert(err.message);
   }
 };
 
-export const GetPost = async({ domain, postID, forumID } : { domain: string, postID: string, forumID: string }) => { 
+export const GetPost = async({ domain, postID, forumID, userID } : { domain: string, postID: string, forumID: string, userID: string }) => { 
 
   try {
     const ref = doc(db, "channels", domain, "forums", forumID, "posts", postID);
     console.log(ref)
     const data = await getDoc(ref);
-    return data.data();
+    const getUserDoc = await getDoc(doc(db, "users", userID));
+    const user =  getUserDoc.data();
+    const allData = data.data();
+    const notifiedOnAllReplies = user.followed_posts !== undefined ? user.followed_posts.includes(postID) : false;
+
+    console.log(notifiedOnAllReplies)
+    return {...allData, date: allData.timestamp.toDate(), notifiedOnAllReplies};
   } catch (err: any) {
     console.error(err);
     alert(err.message);
@@ -214,7 +220,7 @@ export const GetAllPosts = ({ domain, forumID } : {domain: string, forumID: stri
         posts.push(doc.data());
       });
 
-      dispatch({type: FETCH_ALL_POSTS, payload: {loading: false, all_posts: posts }})
+      dispatch({type: FETCH_ALL_POSTS, payload: {loading: false, all_posts: sortAfterDateDesc(posts) }})
     })
   }
 }
@@ -286,7 +292,6 @@ export const GetAllNotifications = ({ userID } :{ userID: string }) => {
 
 
 export const channelNotificationsSettings = async ({userID, notifyOn, channelID} : {userID: string, notifyOn?: string, postID?: string, channelID?: string}) => {
-  console.log(userID, channelID, notifyOn)
   if(notifyOn === 'posts_and_replies'){
     await setDoc(doc(db, "users", userID), {
       notified_on_post_and_replies: arrayUnion(channelID),
@@ -305,6 +310,19 @@ export const channelNotificationsSettings = async ({userID, notifyOn, channelID}
   }
 };
 
+export const postNotificationsSettings = async ({userID, notifyOn, postID} : {userID: string, notifyOn?: string, postID?: string}) => {
+  console.log(userID, postID)
+  if(notifyOn === 'all_replies'){
+    await setDoc(doc(db, "users", userID), {
+      followed_posts: arrayUnion(postID),
+    }, {merge: true});
+  } else {
+    await setDoc(doc(db, "users", userID), {
+      followed_posts: arrayRemove(postID),
+    }, {merge: true});
+  }
+};
+
 
 export const CreateNotification = async ({message, author, link, type, timestamp, requestedResponse, notify, channelID, postID, commentID}: any) => {
   try {
@@ -312,15 +330,19 @@ export const CreateNotification = async ({message, author, link, type, timestamp
     
     querySnapshot.forEach(async (user) => {
       const newId = await firestoreAutoId();
-      const {notified_on_post, notified_on_post_and_replies} = user.data();
+      const {notified_on_post, notified_on_post_and_replies, followed_posts} = user.data();
       const requestResponse = requestedResponse !== undefined ? await requestedResponse.some(({email}: {email: string}) => email === author.email) : false;
+              console.log('REQUEST RESPONSE', requestResponse, requestedResponse)
       const notifed = notify !== undefined ? await notify.some(({email}: {email: string}) => email === author.email) : false;
 
-      if(notifed || type === 'New forum') {
+      if(notifed || type === 'New forum' || requestResponse) {
         await setDoc(doc(db, "users", user.id, 'notifications', newId), {message, author, link, type, id: newId, timestamp, read: false, requestedResponse: requestResponse});
       } else if(notified_on_post_and_replies.includes(channelID)) {
         await setDoc(doc(db, "users", user.id, 'notifications', newId), {message, author, link, type, id: newId, timestamp, read: false, requestedResponse: requestResponse});
-      } else if(type ==='New post' && notified_on_post.includes(channelID)) { 
+      } else if(followed_posts.includes(postID)) {
+        await setDoc(doc(db, "users", user.id, 'notifications', newId), {message, author, link, type, id: newId, timestamp, read: false, requestedResponse: requestResponse});
+      }
+        else if(type ==='New post' && notified_on_post.includes(channelID)) { 
         await setDoc(doc(db, "users", user.id, 'notifications', newId), {message, author, link, type, id: newId, timestamp, read: false, requestedResponse: requestResponse});
       }
     });

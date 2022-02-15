@@ -75,6 +75,10 @@ const ForumItem = styled('span', {
     opacity: '0.5',
   },
 
+   "&:active": {
+    opacity: '0.5',
+  },
+
   'svg': {
     marginRight: '1rem'
   }

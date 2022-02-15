@@ -123,7 +123,6 @@ const ForumOverview = () => {
           }
 
           if(!notificationMenuState && e.key === 's') {
-            console.log('OPENING MENU')
             setNotificationMenuState(true)
             state = true
           }
@@ -152,7 +151,7 @@ const ForumOverview = () => {
           </div>}
 
           <SubscribeDropdown 
-            open={notificationMenuState}
+            open={popupState ? false : notificationMenuState}
             onMouseEnter={() => setNotificationMenuState(true)}
             onMouseLeave={() => setNotificationMenuState(false)}
             title={notificationSetting === 'postsAndReplies' ? 'Notify on Posts and Replies' : notificationSetting === 'posts' ? 'Notify on Posts' : 'Notify on Mentions'}

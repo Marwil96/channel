@@ -323,7 +323,7 @@ const CreatePostPopup = ({open, close, user, domain, forumID}: {open?: boolean, 
         <Fieldset>
           <Label>Notify</Label>
           <UsersWrapper style={{ marginRight: '1.2rem' }}>
-            {notifyUsers.map((user: any) => <UserBox onClick={() => {setNotifyUsers(selectedUsers.filter((item) => item.email !== user.email))}}>{user.email}</UserBox>)}
+            {notifyUsers.map((user: any) => <UserBox onClick={() => {setNotifyUsers(notifyUsers.filter((item) => item.email !== user.email))}}>{user.email}</UserBox>)}
           </UsersWrapper>
         </Fieldset>
         <Fieldset>

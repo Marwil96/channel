@@ -144,6 +144,15 @@ const RightSlot = styled('div', {
   '[data-disabled] &': { color: mauve.mauve8 },
 });
 
+const Trigger = styled('button', {
+  unset: 'all',
+  fontWeight: '500', 
+  textTransform: 'uppercase',
+  background: 'none',
+  border: 'none',
+  fontSize: '$3',
+})
+
 const IconButton = styled('button', {
   all: 'unset',
   fontFamily: 'inherit',
@@ -166,7 +175,7 @@ export const SubscribeDropdown = ({allOptions, title, open, onMouseEnter, onMous
       <DropdownMenu open={open}>
         <DropdownMenuTrigger asChild>
           {/* <IconButton aria-label="Customise options"> */}
-            <span style={{fontWeight: '500', textTransform: 'uppercase'}} onMouseEnter={onMouseEnter}>{title}</span>
+            <Trigger onMouseEnter={onMouseEnter} >{title}</Trigger>
           {/* // </IconButton> */}
         </DropdownMenuTrigger>
 

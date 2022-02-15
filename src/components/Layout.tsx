@@ -8,6 +8,7 @@ import { styled } from '../stitches.config';
 import CreateForumPopup from './CreateForumPopup';
 import CreatePostPopup from './CreatePostPopup';
 import Sidebar from './Sidebar';
+import CommandBar from "../components/CommandBar/index";
 
 const Wrapper = styled('main', {
   display: 'flex',
@@ -22,6 +23,7 @@ const Layout = ({ children } : {children?: any}) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  console.log(userDomain)
   useEffect(() => {
     if(channelName) {
       // dispatch(GetAllPosts({domain: channelName}))
@@ -44,12 +46,14 @@ const Layout = ({ children } : {children?: any}) => {
   }, [user, loading]);
 
   return (
-    <Wrapper>
-      <Sidebar user={userDetails} loading={loading} openPopup={setOpenPopup} />
-      {<CreateForumPopup open={openPopup.type === 'createForum' && openPopup.state} domain={channelName} user={userDetails} close={() => setOpenPopup({state: false, type: ''})} />}
-      {<CreatePostPopup open={openPopup.type === 'createPost' && openPopup.state} domain={channelName} user={userDetails} forumID={forumID} close={() => setOpenPopup({state: false, type: ''})} />}
-      <Outlet context={{user: userDetails, userLoading: loading, openPopup: setOpenPopup, popupState: openPopup.state}}/>
-    </Wrapper>
+    <CommandBar>
+      <Wrapper>
+        <Sidebar user={userDetails} loading={loading} openPopup={setOpenPopup} />
+        {<CreateForumPopup open={openPopup.type === 'createForum' && openPopup.state} domain={channelName} user={userDetails} close={() => setOpenPopup({state: false, type: ''})} />}
+        {<CreatePostPopup open={openPopup.type === 'createPost' && openPopup.state} domain={channelName} user={userDetails} forumID={forumID} close={() => setOpenPopup({state: false, type: ''})} />}
+        <Outlet context={{user: userDetails, userLoading: loading, openPopup: setOpenPopup, popupState: openPopup.state}}/>
+      </Wrapper>
+    </CommandBar>
   )
 }
 
