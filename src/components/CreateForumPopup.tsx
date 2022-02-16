@@ -192,6 +192,7 @@ const CreateForumPopup = ({open, close, user, domain}: {open?: boolean, close?: 
 
   const keyListener = async (e: any) => {
     const ctrlKey = e.ctrlKey || e.metaKey;
+    
     if(ctrlKey && (e.key === 'Return ' || e.key === 'Enter')) {
       await CreateForum({ domain: domain, title: forumName, desc: forumDesc, author: user}); 
       close();
@@ -203,7 +204,7 @@ const CreateForumPopup = ({open, close, user, domain}: {open?: boolean, close?: 
     return () => {
       window.removeEventListener('keydown', keyListener)
     };
-  }, [open]);
+  }, [open, forumName, forumDesc]);
 
   return (
     <Dialog open={open}>
@@ -222,11 +223,11 @@ const CreateForumPopup = ({open, close, user, domain}: {open?: boolean, close?: 
 
         <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
           <ShortcutHint keys={[{displayed:'⌘', key: 'Meta'}, {displayed: 'Return', key:'Return'}]} action='To send' />
-          <DialogClose asChild onClick={async () =>{ await CreateForum({ domain: domain, title: forumName, desc: forumDesc, author: user}); close()}}>
+          {/* <DialogClose asChild onClick={async () =>{ await CreateForum({ domain: domain, title: forumName, desc: forumDesc, author: user}); close()}}> */}
             {/* <Button aria-label="Close" variant="green">
               Create Forum
             </Button> */}
-          </DialogClose>
+          {/* </DialogClose> */}
           
         </Flex>
         <DialogClose asChild onClick={() => close()}>

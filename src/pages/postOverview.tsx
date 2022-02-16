@@ -315,7 +315,6 @@ const PostOverview = () => {
     }
 
     if(ctrlKey && (e.key === 'Return ' || e.key === 'Enter')) {
-      console.log('HELLO')
       postCommentHelper()
     }
   }
@@ -328,7 +327,7 @@ const PostOverview = () => {
     return () => {
       window.removeEventListener('keydown', keyListener)
     };
-  }, [user, notificationMenuState, inputActive]);
+  }, [user, notificationMenuState, inputActive, body]);
 
 
   const postCommentHelper = async () => {
