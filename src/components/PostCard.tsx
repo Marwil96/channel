@@ -1,7 +1,8 @@
 import React from 'react';
 import { styled } from '../stitches.config';
 
-const Wrapper = styled('div', {
+const Wrapper = styled('button', {
+  border: 0,
   display: 'flex',
   flexDirection: 'row',
   alignItems: 'center',

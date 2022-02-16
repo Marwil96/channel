@@ -1,5 +1,23 @@
+import { mauve } from "@radix-ui/colors";
 import { ArrowRightIcon, GearIcon } from "@radix-ui/react-icons";
 import { useEffect, useRef } from "react";
+import { styled } from "../../stitches.config";
+
+const RightSlot = styled("div", {
+  marginLeft: "auto",
+  // height: "100%",
+  alignSelf: "center",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  padding: "1rem 0rem",
+  width: '4rem',
+  background: "#f1f1f1",
+  borderRadius: '0.4rem',
+  color: mauve.mauve11,
+  ":focus > &": { color: "$text" },
+  "[data-disabled] &": { color: mauve.mauve8 },
+});
 
 export default function Result({ item, active, highlight }) {
   const ref = useRef(null);
@@ -12,7 +30,6 @@ export default function Result({ item, active, highlight }) {
 
   return typeof item === "string" ? (
     <span
-      className="text-neutral-500 text-sm capitalize flex items-center h-12"
       style={{
         height: "4.8rem",
         fontSize: "1.4rem",
@@ -29,7 +46,6 @@ export default function Result({ item, active, highlight }) {
   ) : (
     <div
       ref={ref}
-      className="h-12 rounded flex items-center cursor-pointer"
       style={{
         height: "4.8rem",
         cursor: "pointer",
@@ -38,14 +54,22 @@ export default function Result({ item, active, highlight }) {
         borderRadius: "0.4rem",
       }}
     >
-      <span className="pl-2 inline-flex gap-2 items-center"
-        style={{paddingLeft: '0.8rem', gap: '0.8rem', alignItems: 'center', display: 'inline-flex'}}
+      <span
+        style={{
+          paddingLeft: "0.8rem",
+          gap: "0.8rem",
+          alignItems: "center",
+          display: "inline-flex",
+        }}
       >
         {item?.type === "link" && <ArrowRightIcon />}
         {item?.type === "settings" && <GearIcon />}
 
         {item.name}
       </span>
+      {item?.shortcut !== undefined && item?.shortcut.length > 0 && (
+        <RightSlot>{item?.shortcut}</RightSlot>
+      )}
     </div>
   );
 }

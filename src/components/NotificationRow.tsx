@@ -28,11 +28,12 @@ const Title = styled('span', {
   fontWeigiht: '600',
 })
 
-const Lable = styled('span', {
+const Lable = styled('a', {
   fontSize: '$2',
   marginBottom: '0.4rem',
   // fontFamily: '$mono',
   fontStyle: 'italic',
+  userSelect: 'all',
   
   'span': {
     fontStyle: 'normal',
@@ -79,7 +80,7 @@ const NotificationRow = ({message, author, link, type, timestamp, date, id, user
 
       <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
         {requestedResponse && <ButtonWrapper css={{marginRight: '1.4rem', backgroundColor:'$darkGreen', border: 0, '&:hover': {opacity: 0.5}}} onClick={() => navigate(link)}>Response requested by {author.displayName}</ButtonWrapper>}
-        {!requestedResponse && <Lable css={{marginRight: '$3', fontStyle: 'normal', fontFamily: '$mono', textDecoration: 'underline', cursor: 'pointer', '&:hover': {opacity: 0.5}}} onClick={() => navigate(link)}>Go to {type}</Lable>}
+        {!requestedResponse && <button onClick={() => navigate(link)} style={{border: '0',background: 'none',textAlign: 'right', padding: '0',}}><Lable css={{marginRight: '$3', fontStyle: 'normal', fontFamily: '$mono', textDecoration: 'underline', cursor: 'pointer', '&:hover': {opacity: 0.5}}} >Go to {type}</Lable></button>}
         <ButtonWrapper onClick={() => RemoveNotification({userID: userID, id: id})}> 
           <TrashIcon />
         </ButtonWrapper>

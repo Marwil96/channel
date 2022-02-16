@@ -11,6 +11,7 @@ import Input from "src/components/Input";
 import Button from "src/components/Button";
 import { Mention, MentionsInput } from "react-mentions";
 import SubscribeDropdown from "src/components/SubscribeDropdown";
+import ShortcutHint from "src/components/ShortcutHint";
 
 
 const Wrapper = styled('section', {
@@ -286,42 +287,46 @@ const PostOverview = () => {
     }
   }, [user])
 
-  const keyListener = (e: any) => {
+  const keyListener = async (e: any) => {
     let state = false
-      if(!inputActive){
-        if(state || notificationMenuState) {
-          if(e.key === 'a') {
-            postNotificationsSettings({userID: user.userID, notifyOn: 'all_replies', postID: postID}); 
-            setNotificationSetting('allReplies');
-          }
-
-          if(e.key === 'u') {
-            postNotificationsSettings({userID: user.userID, notifyOn: '', postID: postID}); 
-            setNotificationSetting('mentions');
-          }
+    const ctrlKey = e.ctrlKey || e.metaKey;
+    if(!inputActive){
+      if(state || notificationMenuState) {
+        if(e.key === 'a') {
+          postNotificationsSettings({userID: user.userID, notifyOn: 'all_replies', postID: postID}); 
+          setNotificationSetting('allReplies');
         }
 
-        if(!notificationMenuState && e.key === 's') {
-          setNotificationMenuState(true)
-          state = true
-        }
-
-        if(e.key === 'Escape') {
-          setNotificationMenuState(false)
-          state = false
+        if(e.key === 'u') {
+          postNotificationsSettings({userID: user.userID, notifyOn: '', postID: postID}); 
+          setNotificationSetting('mentions');
         }
       }
+
+      if(!notificationMenuState && e.key === 's') {
+        setNotificationMenuState(true)
+        state = true
+      }
+
+      if(e.key === 'Escape') {
+        setNotificationMenuState(false)
+        state = false
+      }
+    }
+
+    if(ctrlKey && (e.key === 'Return ' || e.key === 'Enter')) {
+      console.log('HELLO')
+      postCommentHelper()
+    }
   }
 
   useEffect(() => {
     if(user.userID.length > 0 && !userLoading) {
-      if(!inputActive){
-        window.addEventListener('keyup', keyListener);
-        };
-      }
+      window.addEventListener('keydown', keyListener);
+    }
 
     return () => {
-      window.removeEventListener('keyup', keyListener)
+      window.removeEventListener('keydown', keyListener)
     };
   }, [user, notificationMenuState, inputActive]);
 
@@ -470,10 +475,10 @@ const PostOverview = () => {
             />
             </MentionsField>
           </ReplyWrapper>
-          
-        <Button style={{width:'12rem', alignSelf: 'self-end'}} onClick={() => body.length > 0 && postCommentHelper()}>
+        <ShortcutHint keys={[{displayed:'⌘', key: 'Meta'}, {displayed: 'Return', key:'Return'}]} action='To send' css={{marginTop: '1.2rem', alignSelf: 'flex-end'}} />
+        {/* <Button style={{width:'12rem', alignSelf: 'self-end'}} onClick={() => body.length > 0 && postCommentHelper()}>
          Post Comment
-       </Button>
+       </Button> */}
       </Content>
     </Wrapper>
   );

@@ -182,7 +182,7 @@ const ForumOverview = () => {
 
         <Header>
           <Subtitle>All Posts</Subtitle>
-          <Button onClick={() => openPopup({state: true, type:'createPost'})}>Add Post</Button>
+          {/* <Button onClick={() => openPopup({state: true, type:'createPost'})}>Add Post</Button> */}
         </Header>
         {allPosts.map(({title, body, author, id}: {title: string, body: string, author: any, id: string}) => <PostCard onClick={() => navigate(`/channels/${channelName}/${forumID}/${id}`)} title={title} body={body} username={author.displayName} profileImage={author.photoUrl}  />)}
       </ForumContent>

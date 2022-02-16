@@ -164,7 +164,7 @@ const Sidebar = ({user, loading, openPopup} : {user: any, loading: boolean, open
         <Subtitle>All Channels</Subtitle>
           <ActionsWrapper>
            {allForums.map(({title, id} : {title: string, id: string }) => <Link to={`/channels/${channelName}/${id}`}><ComposedForumItem highlighted={forumID === id}>{title}</ComposedForumItem></Link>)}
-           <span style={{fontSize:'1.4rem', textDecoration:'underline', cursor: 'pointer'}} onClick={() => openPopup({state: true, type: 'createForum'})}>Start Forum</span>
+           {/* <span style={{fontSize:'1.4rem', textDecoration:'underline', cursor: 'pointer'}} onClick={() => openPopup({state: true, type: 'createForum'})}>Start Forum</span> */}
           </ActionsWrapper>
       </div>
       {/* Thread List*/}
@@ -172,7 +172,7 @@ const Sidebar = ({user, loading, openPopup} : {user: any, loading: boolean, open
       {/* Userprofile */}
       <div>
         {!loading ? <ProfileTag image={user.photoUrl} username={user.displayName}  /> : <Spinner />}
-        <Button fullWidth>Create Post</Button>
+        {/* <Button fullWidth>Create Post</Button> */}
       </div>
     </Wrapper>
   )

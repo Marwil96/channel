@@ -3,6 +3,7 @@ import { styled, keyframes } from '@stitches/react';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { CreateForum } from 'src/actions/database';
+import ShortcutHint from './ShortcutHint';
 
 const overlayShow = keyframes({
   '0%': { opacity: 0 },
@@ -41,11 +42,11 @@ const StyledContent = styled(DialogPrimitive.Content, {
   '&:focus': { outline: 'none' },
 });
 
-function Content({ children, ...props }:{children?: any, props?: any }) {
+function Content({ children, closeFunction, ...props }:{closeFunction?: any, children?: any, props?: any }) {
   return (
     <DialogPrimitive.Portal>
       <StyledOverlay  />
-      <StyledContent {...props}>{children}</StyledContent>
+      <StyledContent onEscapeKeyDown={closeFunction} {...props}>{children}</StyledContent>
     </DialogPrimitive.Portal>
   );
 }
@@ -141,15 +142,16 @@ const Fieldset = styled('fieldset', {
 
 const Label = styled('label', {
   fontSize: '$2',
+  marginBottom: '1.2rem',
   color: '#000',
   fontFamily: '$mono',
   width: 90,
-  textAlign: 'right',
+  textAlign: 'left',
 });
 
 const Input = styled('input', {
   all: 'unset',
-  width: '100%',
+  width: '-webkit-fill-available',
   flex: '1',
   display: 'inline-flex',
   alignItems: 'center',
@@ -188,35 +190,44 @@ const CreateForumPopup = ({open, close, user, domain}: {open?: boolean, close?: 
   const [forumDesc, setForumDesc] = useState('');
   // const [bio, setBio] = useState("");
 
+  const keyListener = async (e: any) => {
+    const ctrlKey = e.ctrlKey || e.metaKey;
+    if(ctrlKey && (e.key === 'Return ' || e.key === 'Enter')) {
+      await CreateForum({ domain: domain, title: forumName, desc: forumDesc, author: user}); 
+      close();
+    }
+  }
   useEffect(() => {
-    console.log(forumName, forumDesc);
-  }, [forumDesc, forumName])
+    open && window.addEventListener('keydown', keyListener);
+
+    return () => {
+      window.removeEventListener('keydown', keyListener)
+    };
+  }, [open]);
 
   return (
     <Dialog open={open}>
-      <DialogContent >
+      <DialogContent closeFunction={() => close()} >
         <DialogTitle>Create a new forum</DialogTitle>
-        {/* <DialogDescription>
-          Make changes to your profile here. Click save when you're done.
-        </DialogDescription> */}
+
         <Fieldset>
           <Label htmlFor="forumName">Forum Name</Label>
           <Input id="forumName" value={forumName} onChange={(e) => setForumName(e.target.value)} placeholder="Project Proposals" />
         </Fieldset>
+
         <Fieldset>
           <Label htmlFor="forumDesc">Description</Label>
           <Input id="forumDesc" value={forumDesc} onChange={(e) => setForumDesc(e.target.value)} placeholder="Propose projects and get feedback on your proposals." />
         </Fieldset>
-        {/* <Fieldset>
-          <Label htmlFor="bio">Bio</Label>
-          <TextArea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="gullmar1337" />
-        </Fieldset> */}
+
         <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
+          <ShortcutHint keys={[{displayed:'⌘', key: 'Meta'}, {displayed: 'Return', key:'Return'}]} action='To send' />
           <DialogClose asChild onClick={async () =>{ await CreateForum({ domain: domain, title: forumName, desc: forumDesc, author: user}); close()}}>
-            <Button aria-label="Close" variant="green">
+            {/* <Button aria-label="Close" variant="green">
               Create Forum
-            </Button>
+            </Button> */}
           </DialogClose>
+          
         </Flex>
         <DialogClose asChild onClick={() => close()}>
           <IconButton>

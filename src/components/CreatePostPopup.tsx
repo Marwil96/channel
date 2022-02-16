@@ -6,6 +6,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { MentionsInput, Mention } from 'react-mentions'
 import { CreateForum, CreatePost, GetAllUsers } from 'src/actions/database';
 import { RootStateOrAny, useSelector } from 'react-redux';
+import ShortcutHint from './ShortcutHint';
 
 const overlayShow = keyframes({
   '0%': { opacity: 0 },
@@ -44,11 +45,11 @@ const StyledContent = styled(DialogPrimitive.Content, {
   '&:focus': { outline: 'none' },
 });
 
-function Content({ children, ...props }:{children?: any, props?: any }) {
+function Content({ children, closeFunction, ...props }:{closeFunction?: any, children?: any, props?: any }) {
   return (
     <DialogPrimitive.Portal>
       <StyledOverlay  />
-      <StyledContent {...props}>{children}</StyledContent>
+      <StyledContent onEscapeKeyDown={closeFunction} {...props}>{children}</StyledContent>
     </DialogPrimitive.Portal>
   );
 }
@@ -243,7 +244,6 @@ const SuggestionItemsWrapper = styled('div', {
 
 const CreatePostPopup = ({open, close, user, domain, forumID, popupData}: {open?: boolean, close?: any, user: any, domain: string, forumID?: string, popupData?: any }) => {
   const { allForums } = useSelector((state: RootStateOrAny) => state.DatabaseReducer);
-  console.log('FORUM ID', forumID)
   const [postSubject, setPostSubject] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [body, setBody] = useState("");
@@ -264,6 +264,21 @@ const CreatePostPopup = ({open, close, user, domain, forumID, popupData}: {open?
     } 
     asyncFunc()
   }, [])
+
+  const keyListener = async (e: any) => {
+    const ctrlKey = e.ctrlKey || e.metaKey;
+    if(ctrlKey && (e.key === 'Return ' || e.key === 'Enter')) {
+      await CreatePost({ domain: domain, forumID: selectedChannel.length > 0 ? selectedChannel[0].id : forumID, title: postSubject, body: body, author: user, requestedResponse: selectedUsers, notify: notifyUsers}); 
+      close();
+    }
+  }
+  useEffect(() => {
+    open && window.addEventListener('keydown', keyListener);
+
+    return () => {
+      window.removeEventListener('keydown', keyListener)
+    };
+  }, [open]);
 
 
   const handleChange = async (value: string, type: string, newPlainTextValue: string) => { 
@@ -318,12 +333,12 @@ const CreatePostPopup = ({open, close, user, domain, forumID, popupData}: {open?
 
   return (
     <Dialog open={open}>
-      <DialogContent >
+      <DialogContent closeFunction={() => close()} >
         <DialogTitle>Create Post</DialogTitle>
         <UsersWrapper style={{marginBottom: '1.6rem'}}>
           {selectedChannel.length > 0 && <UserBox css={{marginRight: '1.2rem', background:'$darkGreen', '&:hover': {background: '#f7f7f7', outline: '1px solid black'}}} onClick={() => setSelectedChannel([])}>{selectedChannel[0].title}</UserBox> }{filteredChannels.map(({ title, id }: { title?: string, id?: string }) => <UserBox css={{marginRight: '1.2rem', '&:hover': {background: '#f7f7f7', outline: '1px solid black'}}} onClick={() => setSelectedChannel([{title, id}])}>{title}</UserBox>)}
         </UsersWrapper>
-        {popupData.noForumId && (
+        {popupData?.noForumId && (
           <Fieldset>
             <Label htmlFor="selectChannel">For which channel</Label>
             <Input id="selectChannel" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search for Channel" />
@@ -424,11 +439,7 @@ const CreatePostPopup = ({open, close, user, domain, forumID, popupData}: {open?
         </Fieldset>
 
         <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
-          <DialogClose asChild onClick={async () =>{ await CreatePost({ domain: domain, forumID: selectedChannel.length > 0 ? selectedChannel[0].id : forumID, title: postSubject, body: body, author: user, requestedResponse: selectedUsers, notify: notifyUsers}); close()}}>
-            <Button aria-label="Close" variant="green">
-              Create Post
-            </Button>
-          </DialogClose>
+          <ShortcutHint keys={[{displayed:'⌘', key: 'Meta'}, {displayed: 'Return', key:'Return'}]} action='To send' />
         </Flex>
         
         <DialogClose asChild onClick={() => close()}>
